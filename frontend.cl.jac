@@ -1,5 +1,7 @@
 
 def:pub app() -> JsxElement {
+    has isLoading: bool = False;
+    has apiKey: str = "YOUR_KEY_HERE";
     has selectedScenario: str = "ice";
     has selectedLanguage: str = "english";
     has languageSearch: str = "";
@@ -173,21 +175,14 @@ def:pub app() -> JsxElement {
     def triageReply(message: str) -> str {
         if "door" in message or "raid" in message or "ice" in message or "arrest" in message {
             selectedScenario = "ice";
-            return t("This sounds like an active ICE encounter. First: stay calm, remain silent, and do not open the door unless they show a judicial warrant signed by a judge. Do not sign anything. Call a lawyer or trusted person now.");
-        }
-        if "detained" in message or "detention" in message or "jail" in message or "taken" in message {
+        } elif "detained" in message or "detention" in message or "jail" in message {
             selectedScenario = "detention";
-            return t("This sounds like detention. First: tell the person not to sign anything without a lawyer. Ask for a phone call, get the full name and A-number if available, and start checking the ICE detainee locator and nearby facilities.");
-        }
-        if "order" in message or "notice" in message or "court" in message or "deport" in message {
+        } elif "order" in message or "notice" in message or "deport" in message {
             selectedScenario = "order";
-            return t("This sounds like a deportation order or court notice. First: check the deadline on the paper right away. Do not ignore it and do not sign any waiver. Gather every immigration paper and contact an immigration lawyer or accredited representative immediately.");
-        }
-        if "family" in message or "husband" in message or "wife" in message or "mother" in message or "father" in message or "child" in message {
+        } elif "family" in message or "husband" in message or "wife" in message {
             selectedScenario = "family";
-            return t("This sounds like a family separation emergency. First: gather only the facts you already know, like full name, date of birth, and A-number if you have it. Then check the ICE detainee locator, call nearby detention centers, and contact emergency legal aid fast.");
         }
-        return t("I can help triage this. Tell me whether this is happening now, whether someone is already detained, or whether you received a court or ICE paper. Most important first: remain silent and do not sign anything without a lawyer.");
+        return t("Analyzing your situation...");
     }
 
     def chooseIce() -> None { selectedScenario = "ice"; }
@@ -233,7 +228,8 @@ def:pub app() -> JsxElement {
             return;
         }
         lastUserMessage = chatInput.strip();
-        lastAssistantMessage = triageReply(chatInput.strip().lower());
+        triageReply(chatInput.strip().lower());
+        callClaude(chatInput.strip());
         chatInput = "";
         voiceStatus = t("Message sent");
     }
@@ -247,6 +243,92 @@ def:pub app() -> JsxElement {
         } else {
             voiceStatus = t("Voice mode paused");
         }
+    }
+
+    # Real callClaude
+    # def callClaude(userMessage: str) -> None {
+    #     isLoading = True;
+    #     lastAssistantMessage = t("Analyzing your situation...");
+
+    #     systemPrompt = "You are an emergency legal aid assistant for immigrants in crisis in the United States. Rules: respond in 3 sentences or fewer. Always lead with the single most critical action. Use simple language a panicked non-native English speaker can understand. Respond in the same language the user writes in. Never ask for personal information. Always end with one concrete next step. Never give specific legal advice — always recommend contacting a lawyer.";
+
+    #     fetch("https://api.anthropic.com/v1/messages", {
+    #         "method": "POST",
+    #         "headers": {
+    #             "Content-Type": "application/json",
+    #             "x-api-key": apiKey,
+    #             "anthropic-version": "2023-06-01",
+    #             "anthropic-dangerous-direct-browser-access": "true"
+    #         },
+    #         "body": JSON.stringify({
+    #             "model": "claude-sonnet-4-20250514",
+    #             "max_tokens": 300,
+    #             "system": systemPrompt,
+    #             "messages": [{"role": "user", "content": userMessage}]
+    #         })
+    #     }).then(lambda r: any -> any { return r.json(); }).then(lambda data: any -> None {
+    #         if data.content and data.content[0] {
+    #             lastAssistantMessage = data.content[0].text;
+    #         }
+    #         isLoading = False;
+    #     }).catch(lambda err: any -> None {
+    #         lastAssistantMessage = t("Connection issue. Remember: stay silent, do not sign anything, and call a lawyer immediately.");
+    #         isLoading = False;
+    #     });
+    # }
+
+    # Dummy function, replace when we have Claude API key
+    def callClaude(userMessage: str) -> None {
+        isLoading = True;
+        lastAssistantMessage = t("Analyzing your situation...");
+
+        setTimeout(lambda -> None {
+            if "door" in userMessage.lower() or "ice" in userMessage.lower() {
+                lastAssistantMessage = "Stay calm and do not open the door. Say out loud: I am exercising my right to remain silent. Call an immigration lawyer immediately.";
+            } elif "detained" in userMessage.lower() or "jail" in userMessage.lower() {
+                lastAssistantMessage = "Tell your loved one not to sign anything without a lawyer. Ask for a phone call and get their A-number if possible. Contact RAICES or your local legal aid now.";
+            } elif "deport" in userMessage.lower() or "order" in userMessage.lower() {
+                lastAssistantMessage = "Check the deadline on the paper immediately — missing it makes things worse. Do not sign any waiver. Call an immigration attorney right now.";
+            } else {
+                lastAssistantMessage = "Remain silent and do not sign anything without a lawyer present. Tell me more about what is happening so I can help you find the right next step.";
+            }
+            isLoading = False;
+        }, 1500);
+    }
+
+    def callClaudeRecursive(userMessage: str, draft: str, loop: int) -> None {
+        if loop >= 3 {
+            isLoading = False;
+            return;
+        }
+
+        criticPrompt = "You are a strict quality reviewer for an immigrant legal aid crisis tool. Evaluate this response: is it 3 sentences or fewer? Is the language simple enough for a panicked non-native speaker? Does it give exactly one concrete next action? Reply ONLY in this format: PASSED: true or PASSED: false FEEDBACK: one sentence or none";
+
+        fetch("https://api.anthropic.com/v1/messages", {
+            "method": "POST",
+            "headers": {
+                "Content-Type": "application/json",
+                "x-api-key": apiKey,
+                "anthropic-version": "2023-06-01",
+                "anthropic-dangerous-direct-browser-access": "true"
+            },
+            "body": JSON.stringify({
+                "model": "claude-sonnet-4-20250514",
+                "max_tokens": 100,
+                "messages": [{"role": "user", "content": criticPrompt + "\n\nResponse to evaluate: " + draft}]
+            })
+        }).then(lambda r: any -> any { return r.json(); }).then(lambda data: any -> None {
+            result = data.content[0].text;
+            if "PASSED: true" in result {
+                lastAssistantMessage = draft;
+                isLoading = False;
+            } else {
+                callClaude(userMessage + " (previous response failed quality check, try again with simpler language and one clear action)");
+            }
+        }).catch(lambda err: any -> None {
+            lastAssistantMessage = draft;
+            isLoading = False;
+        });
     }
 
     if panicMode {
@@ -429,7 +511,7 @@ def:pub app() -> JsxElement {
                             </div>
                             <div className="max-w-[90%] rounded-2xl bg-white/10 px-4 py-3 text-sm leading-6 text-white shadow-soft">
                                 <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">{t("assistant")}</p>
-                                <p>{lastAssistantMessage}</p>
+                                <p>{isLoading ? t("Analyzing your situation...") : lastAssistantMessage}</p>
                             </div>
                         </div>
                         <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
