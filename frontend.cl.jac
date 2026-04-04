@@ -1,4 +1,3 @@
-
 def:pub app() -> JsxElement {
     has isLoading: bool = False;
     has apiKey: str = "YOUR_KEY_HERE";
@@ -50,7 +49,6 @@ def:pub app() -> JsxElement {
             if english == "Order" { return "Orden"; }
             if english == "Missing family" { return "Familiar desaparecido"; }
             if english == "Most important first action" { return "Acción más importante primero"; }
-            if english == "Crisis Triangle chatbot" { return "Chatbot Triángulo de Crisis"; }
             if english == "Talk to the assistant now" { return "Hable con el asistente ahora"; }
             if english == "Describe the emergency in your own words. The chatbot triages the situation and points to the right next steps immediately." { return "Describa la emergencia con sus propias palabras. El chatbot evalúa la situación y señala de inmediato los pasos correctos a seguir."; }
             if english == "Voice input mode" { return "Modo de entrada por voz"; }
@@ -61,32 +59,12 @@ def:pub app() -> JsxElement {
             if english == "Voice input" { return "Entrada por voz"; }
             if english == "Send" { return "Enviar"; }
             if english == "Current conversation language:" { return "Idioma actual de la conversación:"; }
-            if english == "Real-time language translation" { return "Traducción de idioma en tiempo real"; }
-            if english == "The assistant keeps the full crisis flow in the user’s language, not just the interface. The language selector stays immediately visible near the top for faster access." { return "El asistente mantiene todo el flujo de crisis en el idioma del usuario, no solo la interfaz. El selector de idioma permanece visible arriba para un acceso más rápido."; }
-            if english == "Translated urgent message" { return "Mensaje urgente traducido"; }
-            if english == "Core rights to reinforce" { return "Derechos clave para reforzar"; }
-            if english == "Right to remain silent" { return "Derecho a guardar silencio"; }
-            if english == "You do not have to answer questions about immigration status, birthplace, or how you entered the country." { return "No tiene que responder preguntas sobre su estatus migratorio, lugar de nacimiento o cómo entró al país."; }
-            if english == "Right to refuse to sign" { return "Derecho a negarse a firmar"; }
-            if english == "Do not sign forms, waivers, or departure papers until a lawyer reviews them with you." { return "No firme formularios, renuncias ni documentos de salida hasta que un abogado los revise con usted."; }
-            if english == "Right to call for help" { return "Derecho a pedir ayuda"; }
-            if english == "If detained, ask to make a phone call and ask to contact your consulate if you were born in another country." { return "Si está detenido, pida hacer una llamada telefónica y pida contactar a su consulado si nació en otro país."; }
-            if english == "Possible right to a hearing" { return "Posible derecho a una audiencia"; }
-            if english == "Many people have the right to see an immigration judge before removal. A lawyer can check exceptions and deadlines." { return "Muchas personas tienen derecho a ver a un juez de inmigración antes de la expulsión. Un abogado puede revisar excepciones y plazos."; }
-            if english == "Crisis triage chatbot" { return "Chatbot de evaluación de crisis"; }
-            if english == "Identifies detention, raids, deportation orders, or family separation and routes the user to the right information immediately." { return "Identifica detención, redadas, órdenes de deportación o separación familiar y dirige al usuario a la información correcta de inmediato."; }
-            if english == "Know your rights explainer" { return "Explicación de sus derechos"; }
-            if english == "Turns a user’s own words into plain-language rights, urgent steps, and reminders not to sign anything without a lawyer." { return "Convierte las propias palabras del usuario en derechos en lenguaje claro, pasos urgentes y recordatorios de no firmar nada sin un abogado."; }
-            if english == "Document analyzer" { return "Analizador de documentos"; }
-            if english == "Explains ICE notices, court orders, and warrants, including missing details like a judge’s signature and what to do next." { return "Explica avisos de ICE, órdenes judiciales y órdenes de registro, incluyendo detalles faltantes como la firma de un juez y qué hacer después."; }
-            if english == "Real-time translation" { return "Traducción en tiempo real"; }
-            if english == "Keeps the full crisis conversation in the user’s language from intake through legal handoff and phone scripts." { return "Mantiene toda la conversación de crisis en el idioma del usuario desde el inicio hasta la derivación legal y los guiones telefónicos."; }
             if english == "If someone is physically unsafe" { return "Si alguien está físicamente en peligro"; }
             if english == "Move to immediate physical safety first. Call 911 if there is a medical emergency or immediate danger. Legal strategy comes after safety." { return "Muévase primero a un lugar físicamente seguro. Llame al 911 si hay una emergencia médica o peligro inmediato. La estrategia legal viene después de la seguridad."; }
             if english == "Privacy-first support" { return "Apoyo con prioridad en la privacidad"; }
             if english == "This experience should not ask for or store sensitive personal details. Share only what is necessary with a licensed attorney or accredited representative." { return "Esta experiencia no debe pedir ni guardar datos personales sensibles. Comparta solo lo necesario con un abogado con licencia o un representante acreditado."; }
             if english == "Multilingual and plain language" { return "Multilingüe y en lenguaje claro"; }
-            if english == "The assistant should answer in the user’s language, use short sentences, and explain legal terms simply. Specific case strategy must go to a lawyer." { return "El asistente debe responder en el idioma del usuario, usar frases cortas y explicar los términos legales de forma sencilla. La estrategia específica del caso debe ir a un abogado."; }
+            if english == "The assistant should answer in the user's language, use short sentences, and explain legal terms simply. Specific case strategy must go to a lawyer." { return "El asistente debe responder en el idioma del usuario, usar frases cortas y explicar los términos legales de forma sencilla. La estrategia específica del caso debe ir a un abogado."; }
             if english == "Emergency legal contacts" { return "Contactos legales de emergencia"; }
             if english == "CLINIC legal help directory" { return "Directorio de ayuda legal de CLINIC"; }
             if english == "Session auto-erase confirmed" { return "Borrado automático de sesión confirmado"; }
@@ -142,7 +120,7 @@ def:pub app() -> JsxElement {
         if kind == "ice" { return t("Stay calm. You have the right to remain silent. You do not have to answer questions about where you were born or how you entered the U.S."); }
         if kind == "detention" { return t("Tell your loved one: do not sign papers without a lawyer. They can ask to make a phone call."); }
         if kind == "order" { return t("Read the notice carefully and check the deadline immediately. Missing a deadline can make things worse."); }
-        return t("Start with the person’s full name, date of birth, and A-number only if you already have it. Do not share more personal information than needed.");
+        return t("Start with the person's full name, date of birth, and A-number only if you already have it. Do not share more personal information than needed.");
     }
 
     def step2(kind: str) -> str {
@@ -156,7 +134,7 @@ def:pub app() -> JsxElement {
         if kind == "ice" { return t("Do not sign anything. Ask for a lawyer immediately. If safe, record names, badge numbers, and what happened."); }
         if kind == "detention" { return t("Gather the A-number if available, full legal name, date of birth, and copies of immigration notices already in hand."); }
         if kind == "order" { return t("Collect every court paper, prior applications, and proof of family ties, fear of return, or time in the U.S."); }
-        return t("Contact the person’s consulate if they are foreign-born and ask trusted family members to preserve documents and messages.");
+        return t("Contact the person's consulate if they are foreign-born and ask trusted family members to preserve documents and messages.");
     }
 
     def step4(kind: str) -> str {
@@ -245,39 +223,6 @@ def:pub app() -> JsxElement {
         }
     }
 
-    # Real callClaude
-    # def callClaude(userMessage: str) -> None {
-    #     isLoading = True;
-    #     lastAssistantMessage = t("Analyzing your situation...");
-
-    #     systemPrompt = "You are an emergency legal aid assistant for immigrants in crisis in the United States. Rules: respond in 3 sentences or fewer. Always lead with the single most critical action. Use simple language a panicked non-native English speaker can understand. Respond in the same language the user writes in. Never ask for personal information. Always end with one concrete next step. Never give specific legal advice — always recommend contacting a lawyer.";
-
-    #     fetch("https://api.anthropic.com/v1/messages", {
-    #         "method": "POST",
-    #         "headers": {
-    #             "Content-Type": "application/json",
-    #             "x-api-key": apiKey,
-    #             "anthropic-version": "2023-06-01",
-    #             "anthropic-dangerous-direct-browser-access": "true"
-    #         },
-    #         "body": JSON.stringify({
-    #             "model": "claude-sonnet-4-20250514",
-    #             "max_tokens": 300,
-    #             "system": systemPrompt,
-    #             "messages": [{"role": "user", "content": userMessage}]
-    #         })
-    #     }).then(lambda r: any -> any { return r.json(); }).then(lambda data: any -> None {
-    #         if data.content and data.content[0] {
-    #             lastAssistantMessage = data.content[0].text;
-    #         }
-    #         isLoading = False;
-    #     }).catch(lambda err: any -> None {
-    #         lastAssistantMessage = t("Connection issue. Remember: stay silent, do not sign anything, and call a lawyer immediately.");
-    #         isLoading = False;
-    #     });
-    # }
-
-    # Dummy function, replace when we have Claude API key
     def callClaude(userMessage: str) -> None {
         isLoading = True;
         lastAssistantMessage = t("Analyzing your situation...");
@@ -294,41 +239,6 @@ def:pub app() -> JsxElement {
             }
             isLoading = False;
         }, 1500);
-    }
-
-    def callClaudeRecursive(userMessage: str, draft: str, loop: int) -> None {
-        if loop >= 3 {
-            isLoading = False;
-            return;
-        }
-
-        criticPrompt = "You are a strict quality reviewer for an immigrant legal aid crisis tool. Evaluate this response: is it 3 sentences or fewer? Is the language simple enough for a panicked non-native speaker? Does it give exactly one concrete next action? Reply ONLY in this format: PASSED: true or PASSED: false FEEDBACK: one sentence or none";
-
-        fetch("https://api.anthropic.com/v1/messages", {
-            "method": "POST",
-            "headers": {
-                "Content-Type": "application/json",
-                "x-api-key": apiKey,
-                "anthropic-version": "2023-06-01",
-                "anthropic-dangerous-direct-browser-access": "true"
-            },
-            "body": JSON.stringify({
-                "model": "claude-sonnet-4-20250514",
-                "max_tokens": 100,
-                "messages": [{"role": "user", "content": criticPrompt + "\n\nResponse to evaluate: " + draft}]
-            })
-        }).then(lambda r: any -> any { return r.json(); }).then(lambda data: any -> None {
-            result = data.content[0].text;
-            if "PASSED: true" in result {
-                lastAssistantMessage = draft;
-                isLoading = False;
-            } else {
-                callClaude(userMessage + " (previous response failed quality check, try again with simpler language and one clear action)");
-            }
-        }).catch(lambda err: any -> None {
-            lastAssistantMessage = draft;
-            isLoading = False;
-        });
     }
 
     if panicMode {
@@ -352,7 +262,7 @@ def:pub app() -> JsxElement {
 
                             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
                                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Emergency legal help</p>
-                                <p className="mt-2 text-sm leading-6 text-slate-700">RAICES · ACLU Immigrants’ Rights · National Immigration Legal Services Directory · {t("CLINIC legal help directory")}</p>
+                                <p className="mt-2 text-sm leading-6 text-slate-700">RAICES · ACLU Immigrants' Rights · National Immigration Legal Services Directory · {t("CLINIC legal help directory")}</p>
                             </div>
 
                             <div className="grid gap-4 sm:grid-cols-3">
@@ -371,7 +281,7 @@ def:pub app() -> JsxElement {
                                     </ul>
                                 </div>
                                 <div className="rounded-3xl border border-red-200 bg-red-50 p-5">
-                                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-700">DON’T</p>
+                                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-700">DON'T</p>
                                     <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-800">
                                         <li>• {t("Do not sign anything without a lawyer.")}</li>
                                         <li>• {t("You have the right to remain silent.")}</li>
@@ -491,81 +401,49 @@ def:pub app() -> JsxElement {
             </section>
 
             <section id="assistant" className="mx-auto max-w-7xl px-6 py-10 lg:px-10">
-                <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-                    <div className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                            <div>
-                                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300">{t("Crisis Triangle chatbot")}</p>
-                                <h3 className="mt-2 text-2xl font-bold">{t("Talk to the assistant now")}</h3>
-                                <p className="mt-2 text-sm leading-6 text-slate-300">{t("Describe the emergency in your own words. The chatbot triages the situation and points to the right next steps immediately.")}</p>
-                            </div>
-                            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                                <p className="font-semibold text-white">{t("Voice input mode")}</p>
-                                <p className="mt-1 text-xs leading-5 text-slate-300">{t("Tap the microphone to speak instead of typing.")}</p>
-                            </div>
+                <div className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h3 className="mt-2 text-2xl font-bold">{t("Talk to the assistant now")}</h3>
+                            <p className="mt-2 text-sm leading-6 text-slate-300">{t("Describe the emergency in your own words. The chatbot triages the situation and points to the right next steps immediately.")}</p>
                         </div>
-                        <div className="mt-5 space-y-3 rounded-2xl border border-white/10 bg-black/20 p-4">
-                            <div className="ml-auto max-w-[90%] rounded-2xl bg-cyan-500 px-4 py-3 text-sm leading-6 text-slate-950 shadow-soft">
-                                <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">{t("user")}</p>
-                                <p>{lastUserMessage}</p>
-                            </div>
-                            <div className="max-w-[90%] rounded-2xl bg-white/10 px-4 py-3 text-sm leading-6 text-white shadow-soft">
-                                <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">{t("assistant")}</p>
-                                {isLoading and <p>{t("Analyzing your situation...")}</p>}
-                                {not isLoading and <p>{lastAssistantMessage}</p>}
-                            </div>
-                        </div>
-                        <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
-                            <input className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30" value={chatInput} onChange={updateChatInput} placeholder={t("Type what is happening right now")} />
-                            <button className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400" onClick={startVoiceInput}><span>{t("Voice input")}</span></button>
-                            <button className="rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300" onClick={sendChat}><span>{t("Send")}</span></button>
-                        </div>
-                        <p className="mt-3 text-xs leading-5 text-slate-300">{voiceStatus}. {t("Current conversation language:")} {languageLabel(selectedLanguage)}.</p>
-                    </div>
-
-                    <div className="space-y-6">
-                        <div className="rounded-3xl border border-border bg-card p-6 shadow-card">
-                            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">{t("Real-time language translation")}</p>
-                            <p className="mt-2 text-sm leading-6 text-gray-700">{t("The assistant keeps the full crisis flow in the user’s language, not just the interface. The language selector stays immediately visible near the top for faster access.")}</p>
-                            <div className="mt-4 rounded-2xl bg-blue-50 p-4">
-                                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">{t("Translated urgent message")}</p>
-                                <p className="mt-2 text-base font-semibold text-gray-900">{translatedUrgentLine(selectedLanguage)}</p>
-                                <p className="mt-2 text-sm text-blue-900">{t("Current conversation language:")} {languageLabel(selectedLanguage)}</p>
-                            </div>
-                        </div>
-
-                        <div className="rounded-3xl border border-border bg-card p-6 shadow-card">
-                            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">{t("Core rights to reinforce")}</p>
-                            <div className="mt-4 space-y-4">
-                                <div className="rounded-2xl bg-blue-50 p-4"><h3 className="font-bold text-gray-900">{t("Right to remain silent")}</h3><p className="mt-1 text-sm leading-6 text-gray-700">{t("You do not have to answer questions about immigration status, birthplace, or how you entered the country.")}</p></div>
-                                <div className="rounded-2xl bg-red-50 p-4"><h3 className="font-bold text-gray-900">{t("Right to refuse to sign")}</h3><p className="mt-1 text-sm leading-6 text-gray-700">{t("Do not sign forms, waivers, or departure papers until a lawyer reviews them with you.")}</p></div>
-                                <div className="rounded-2xl bg-emerald-50 p-4"><h3 className="font-bold text-gray-900">{t("Right to call for help")}</h3><p className="mt-1 text-sm leading-6 text-gray-700">{t("If detained, ask to make a phone call and ask to contact your consulate if you were born in another country.")}</p></div>
-                                <div className="rounded-2xl bg-orange-50 p-4"><h3 className="font-bold text-gray-900">{t("Possible right to a hearing")}</h3><p className="mt-1 text-sm leading-6 text-gray-700">{t("Many people have the right to see an immigration judge before removal. A lawyer can check exceptions and deadlines.")}</p></div>
-                            </div>
+                        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                            <p className="font-semibold text-white">{t("Voice input mode")}</p>
+                            <p className="mt-1 text-xs leading-5 text-slate-300">{t("Tap the microphone to speak instead of typing.")}</p>
                         </div>
                     </div>
+                    <div className="mt-5 space-y-3 rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="ml-auto max-w-[90%] rounded-2xl bg-cyan-500 px-4 py-3 text-sm leading-6 text-slate-950 shadow-soft">
+                            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">{t("user")}</p>
+                            <p>{lastUserMessage}</p>
+                        </div>
+                        <div className="max-w-[90%] rounded-2xl bg-white/10 px-4 py-3 text-sm leading-6 text-white shadow-soft">
+                            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">{t("assistant")}</p>
+                            {isLoading and <p>{t("Analyzing your situation...")}</p>}
+                            {not isLoading and <p>{lastAssistantMessage}</p>}
+                        </div>
+                    </div>
+                    <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+                        <input className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30" value={chatInput} onChange={updateChatInput} placeholder={t("Type what is happening right now")} />
+                        <button className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400" onClick={startVoiceInput}><span>{t("Voice input")}</span></button>
+                        <button className="rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300" onClick={sendChat}><span>{t("Send")}</span></button>
+                    </div>
+                    <p className="mt-3 text-xs leading-5 text-slate-300">{voiceStatus}. {t("Current conversation language:")} {languageLabel(selectedLanguage)}.</p>
                 </div>
             </section>
 
             <section className="mx-auto max-w-7xl px-6 pb-12 lg:px-10">
-                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-                    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft"><p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-700">{t("Crisis triage chatbot")}</p><p className="mt-3 text-sm leading-6 text-gray-700">{t("Identifies detention, raids, deportation orders, or family separation and routes the user to the right information immediately.")}</p></div>
-                    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft"><p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">{t("Know your rights explainer")}</p><p className="mt-3 text-sm leading-6 text-gray-700">{t("Turns a user’s own words into plain-language rights, urgent steps, and reminders not to sign anything without a lawyer.")}</p></div>
-                    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft"><p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-700">{t("Document analyzer")}</p><p className="mt-3 text-sm leading-6 text-gray-700">{t("Explains ICE notices, court orders, and warrants, including missing details like a judge’s signature and what to do next.")}</p></div>
-                    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft"><p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">{t("Real-time translation")}</p><p className="mt-3 text-sm leading-6 text-gray-700">{t("Keeps the full crisis conversation in the user’s language from intake through legal handoff and phone scripts.")}</p></div>
-                </div>
-
                 <div className="mt-6 grid gap-6 md:grid-cols-3">
                     <div className="rounded-3xl border border-border bg-card p-6 shadow-soft"><h3 className="text-xl font-bold text-gray-900">{t("If someone is physically unsafe")}</h3><p className="mt-3 text-sm leading-6 text-gray-700">{t("Move to immediate physical safety first. Call 911 if there is a medical emergency or immediate danger. Legal strategy comes after safety.")}</p></div>
                     <div className="rounded-3xl border border-border bg-card p-6 shadow-soft"><h3 className="text-xl font-bold text-gray-900">{t("Privacy-first support")}</h3><p className="mt-3 text-sm leading-6 text-gray-700">{t("This experience should not ask for or store sensitive personal details. Share only what is necessary with a licensed attorney or accredited representative.")}</p></div>
-                    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft"><h3 className="text-xl font-bold text-gray-900">{t("Multilingual and plain language")}</h3><p className="mt-3 text-sm leading-6 text-gray-700">{t("The assistant should answer in the user’s language, use short sentences, and explain legal terms simply. Specific case strategy must go to a lawyer.")}</p></div>
+                    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft"><h3 className="text-xl font-bold text-gray-900">{t("Multilingual and plain language")}</h3><p className="mt-3 text-sm leading-6 text-gray-700">{t("The assistant should answer in the user's language, use short sentences, and explain legal terms simply. Specific case strategy must go to a lawyer.")}</p></div>
                 </div>
 
                 <div className="mt-6 rounded-3xl border border-border bg-gray-900 p-6 text-white shadow-card">
                     <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-300">{t("Emergency legal contacts")}</p>
                     <div className="mt-4 grid gap-4 text-sm leading-6 text-gray-200 sm:grid-cols-2">
                         <div><p className="font-bold text-white">RAICES</p><p>raicestexas.org</p></div>
-                        <div><p className="font-bold text-white">ACLU Immigrants’ Rights</p><p>aclu.org/issues/immigrants-rights</p></div>
+                        <div><p className="font-bold text-white">ACLU Immigrants' Rights</p><p>aclu.org/issues/immigrants-rights</p></div>
                         <div><p className="font-bold text-white">National Immigration Legal Services Directory</p><p>immigrationadvocates.org/nonprofit/legaldirectory</p></div>
                         <div><p className="font-bold text-white">{t("CLINIC legal help directory")}</p><p>cliniclegal.org/find-legal-help</p></div>
                     </div>
@@ -576,4 +454,3 @@ def:pub app() -> JsxElement {
         </div>
     );
 }
-
