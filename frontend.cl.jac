@@ -303,6 +303,10 @@ cl def:pub app() -> JsxElement {
     def disablePanic() -> None { panicMode = False; }
     def closeSession() -> None { sessionClosed = True; }
     def reopenSession() -> None { sessionClosed = False; }
+    def autoExitSite() -> None {
+        sessionClosed = True;
+        window.location.href = "about:blank";
+    }
 
     if panicMode {
         return (
@@ -344,6 +348,18 @@ cl def:pub app() -> JsxElement {
 
     return (
         <div className="min-h-screen bg-background text-foreground">
+            <header className="sticky top-0 z-30 border-b border-red-200 bg-white/95 backdrop-blur">
+                <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-4 lg:flex-row lg:items-center lg:justify-between lg:px-10">
+                    <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-green-700">Session auto-erase available</p>
+                        <p className="mt-1 text-sm leading-6 text-gray-700">Use Auto Exit any time to close this session quickly. Keyboard shortcut: press <span className="font-bold">Esc</span> to exit the website fast.</p>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                        <button className="rounded-full border border-green-300 bg-green-50 px-5 py-3 text-sm font-semibold text-green-800 transition hover:bg-green-100" onClick={closeSession}><span>Confirm auto-erase</span></button>
+                        <button className="rounded-full bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-black" onClick={autoExitSite}><span>Auto Exit</span></button>
+                    </div>
+                </div>
+            </header>
             <section className="border-b border-border bg-gradient-to-b from-red-50 via-orange-50 to-background">
                 <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-10 lg:flex-row lg:items-start lg:justify-between lg:px-10">
                     <div className="max-w-3xl">
