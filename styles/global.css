@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Logo drop-shadow hover — not expressible with Tailwind utilities */
+.logo-vite:hover {
+  filter: drop-shadow(0 0 1.5rem #a855f7aa);
+}
+
+.logo-jaseci:hover {
+  filter: drop-shadow(0 0 1.5rem #f97316aa);
+}
+
+/* Gradient text — requires -webkit-text-fill-color which Tailwind can't set */
+.gradient-text {
+  background: linear-gradient(135deg, #a855f7, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
