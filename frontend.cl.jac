@@ -1,6 +1,7 @@
 cl def:pub app() -> JsxElement {
     has selectedScenario: str = "ice";
     has selectedLanguage: str = "english";
+    has languageSearch: str = "";
     has panicMode: bool = False;
     has sessionClosed: bool = False;
 
@@ -30,6 +31,57 @@ cl def:pub app() -> JsxElement {
         if kind == "arabic" {
             return "العربية";
         }
+        if kind == "portuguese" {
+            return "Português";
+        }
+        if kind == "mandarin" {
+            return "中文（普通话）";
+        }
+        if kind == "cantonese" {
+            return "中文（廣東話）";
+        }
+        if kind == "hindi" {
+            return "हिन्दी";
+        }
+        if kind == "urdu" {
+            return "اردو";
+        }
+        if kind == "bengali" {
+            return "বাংলা";
+        }
+        if kind == "punjabi" {
+            return "ਪੰਜਾਬੀ";
+        }
+        if kind == "russian" {
+            return "Русский";
+        }
+        if kind == "ukrainian" {
+            return "Українська";
+        }
+        if kind == "korean" {
+            return "한국어";
+        }
+        if kind == "vietnamese" {
+            return "Tiếng Việt";
+        }
+        if kind == "tagalog" {
+            return "Tagalog";
+        }
+        if kind == "haitian_creole" {
+            return "Kreyòl Ayisyen";
+        }
+        if kind == "somali" {
+            return "Soomaali";
+        }
+        if kind == "swahili" {
+            return "Kiswahili";
+        }
+        if kind == "farsi" {
+            return "فارسی";
+        }
+        if kind == "turkish" {
+            return "Türkçe";
+        }
         return "English";
     }
 
@@ -43,7 +95,128 @@ cl def:pub app() -> JsxElement {
         if lang == "arabic" {
             return "ابق هادئًا. التزم الصمت. لا توقّع أي شيء قبل التحدث مع محامٍ.";
         }
+        if lang == "portuguese" {
+            return "Mantenha a calma. Fique em silêncio. Não assine nada sem falar com um advogado.";
+        }
+        if lang == "mandarin" {
+            return "保持冷静。保持沉默。没有律师前不要签署任何文件。";
+        }
+        if lang == "cantonese" {
+            return "保持冷靜。保持沉默。未同律師傾之前唔好簽任何文件。";
+        }
+        if lang == "hindi" {
+            return "शांत रहें। चुप रहें। वकील से बात किए बिना कुछ भी हस्ताक्षर न करें।";
+        }
+        if lang == "urdu" {
+            return "پرسکون رہیں۔ خاموش رہیں۔ وکیل سے بات کیے بغیر کسی چیز پر دستخط نہ کریں۔";
+        }
+        if lang == "bengali" {
+            return "শান্ত থাকুন। চুপ থাকুন। আইনজীবীর সঙ্গে কথা না বলে কিছু সই করবেন না।";
+        }
+        if lang == "punjabi" {
+            return "ਸ਼ਾਂਤ ਰਹੋ। ਚੁੱਪ ਰਹੋ। ਵਕੀਲ ਨਾਲ ਗੱਲ ਕੀਤੇ ਬਿਨਾਂ ਕਿਸੇ ਵੀ ਕਾਗਜ਼ 'ਤੇ ਦਸਤਖਤ ਨਾ ਕਰੋ।";
+        }
+        if lang == "russian" {
+            return "Сохраняйте спокойствие. Храните молчание. Ничего не подписывайте без разговора с адвокатом.";
+        }
+        if lang == "ukrainian" {
+            return "Зберігайте спокій. Мовчіть. Нічого не підписуйте без розмови з адвокатом.";
+        }
+        if lang == "korean" {
+            return "침착하세요. 침묵을 지키세요. 변호사와 상의하기 전에는 어떤 서류에도 서명하지 마세요.";
+        }
+        if lang == "vietnamese" {
+            return "Hãy bình tĩnh. Giữ im lặng. Đừng ký bất cứ giấy tờ nào trước khi nói chuyện với luật sư.";
+        }
+        if lang == "tagalog" {
+            return "Manatiling kalmado. Manahimik. Huwag pumirma ng anuman nang hindi muna nakakausap ang abogado.";
+        }
+        if lang == "haitian_creole" {
+            return "Rete kalm. Pa pale. Pa siyen anyen san ou pa pale ak yon avoka.";
+        }
+        if lang == "somali" {
+            return "Is deji. Aamus. Waxba ha saxiixin adigoon la hadlin qareen.";
+        }
+        if lang == "swahili" {
+            return "Tulia. Kaa kimya. Usisaini chochote kabla ya kuzungumza na wakili.";
+        }
+        if lang == "farsi" {
+            return "آرام بمانید. سکوت کنید. بدون صحبت با وکیل هیچ چیزی را امضا نکنید.";
+        }
+        if lang == "turkish" {
+            return "Sakin olun. Sessiz kalın. Bir avukatla konuşmadan hiçbir şeyi imzalamayın.";
+        }
         return "Stay calm. Remain silent. Do not sign anything without speaking to a lawyer.";
+    }
+
+    def languageMatches(kind: str, query: str) -> bool {
+        if query == "" {
+            return True;
+        }
+        if kind == "english" {
+            return "english" in query or "ing" in query;
+        }
+        if kind == "spanish" {
+            return "spanish" in query or "espanol" in query or "español" in query;
+        }
+        if kind == "french" {
+            return "french" in query or "francais" in query or "français" in query;
+        }
+        if kind == "arabic" {
+            return "arabic" in query or "العربية" in query;
+        }
+        if kind == "portuguese" {
+            return "portuguese" in query or "portugues" in query or "português" in query;
+        }
+        if kind == "mandarin" {
+            return "mandarin" in query or "chinese" in query or "中文" in query or "普通话" in query;
+        }
+        if kind == "cantonese" {
+            return "cantonese" in query or "廣東話" in query or "广东话" in query;
+        }
+        if kind == "hindi" {
+            return "hindi" in query or "हिन्दी" in query;
+        }
+        if kind == "urdu" {
+            return "urdu" in query or "اردو" in query;
+        }
+        if kind == "bengali" {
+            return "bengali" in query or "bangla" in query or "বাংলা" in query;
+        }
+        if kind == "punjabi" {
+            return "punjabi" in query or "ਪੰਜਾਬੀ" in query;
+        }
+        if kind == "russian" {
+            return "russian" in query or "русский" in query;
+        }
+        if kind == "ukrainian" {
+            return "ukrainian" in query or "українська" in query;
+        }
+        if kind == "korean" {
+            return "korean" in query or "한국어" in query;
+        }
+        if kind == "vietnamese" {
+            return "vietnamese" in query or "tiếng việt" in query or "viet" in query;
+        }
+        if kind == "tagalog" {
+            return "tagalog" in query or "filipino" in query;
+        }
+        if kind == "haitian_creole" {
+            return "haitian" in query or "creole" in query or "kreyol" in query or "kreyòl" in query;
+        }
+        if kind == "somali" {
+            return "somali" in query or "soomaali" in query;
+        }
+        if kind == "swahili" {
+            return "swahili" in query or "kiswahili" in query;
+        }
+        if kind == "farsi" {
+            return "farsi" in query or "persian" in query or "فارسی" in query;
+        }
+        if kind == "turkish" {
+            return "turkish" in query or "türkçe" in query or "turkce" in query;
+        }
+        return False;
     }
 
     def step1(kind: str) -> str {
@@ -103,10 +276,28 @@ cl def:pub app() -> JsxElement {
     def chooseOrder() -> None { selectedScenario = "order"; }
     def chooseFamily() -> None { selectedScenario = "family"; }
 
-    def setEnglish() -> None { selectedLanguage = "english"; }
-    def setSpanish() -> None { selectedLanguage = "spanish"; }
-    def setFrench() -> None { selectedLanguage = "french"; }
-    def setArabic() -> None { selectedLanguage = "arabic"; }
+    def searchLanguage(e: any) -> None { languageSearch = e.target.value.lower(); }
+    def chooseEnglish() -> None { selectedLanguage = "english"; }
+    def chooseSpanish() -> None { selectedLanguage = "spanish"; }
+    def chooseFrench() -> None { selectedLanguage = "french"; }
+    def chooseArabic() -> None { selectedLanguage = "arabic"; }
+    def choosePortuguese() -> None { selectedLanguage = "portuguese"; }
+    def chooseMandarin() -> None { selectedLanguage = "mandarin"; }
+    def chooseCantonese() -> None { selectedLanguage = "cantonese"; }
+    def chooseHindi() -> None { selectedLanguage = "hindi"; }
+    def chooseUrdu() -> None { selectedLanguage = "urdu"; }
+    def chooseBengali() -> None { selectedLanguage = "bengali"; }
+    def choosePunjabi() -> None { selectedLanguage = "punjabi"; }
+    def chooseRussian() -> None { selectedLanguage = "russian"; }
+    def chooseUkrainian() -> None { selectedLanguage = "ukrainian"; }
+    def chooseKorean() -> None { selectedLanguage = "korean"; }
+    def chooseVietnamese() -> None { selectedLanguage = "vietnamese"; }
+    def chooseTagalog() -> None { selectedLanguage = "tagalog"; }
+    def chooseHaitianCreole() -> None { selectedLanguage = "haitian_creole"; }
+    def chooseSomali() -> None { selectedLanguage = "somali"; }
+    def chooseSwahili() -> None { selectedLanguage = "swahili"; }
+    def chooseFarsi() -> None { selectedLanguage = "farsi"; }
+    def chooseTurkish() -> None { selectedLanguage = "turkish"; }
 
     def enablePanic() -> None { panicMode = True; }
     def disablePanic() -> None { panicMode = False; }
@@ -232,13 +423,46 @@ cl def:pub app() -> JsxElement {
 
                     <div className="space-y-6">
                         <div className="rounded-3xl border border-border bg-card p-6 shadow-card">
+                            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-green-700">Session auto-erase</p>
+                            <p className="mt-2 text-sm leading-6 text-gray-700">At the end of every session, the assistant should clearly confirm that no personal data was retained.</p>
+                            <div className="mt-4 rounded-2xl bg-green-50 p-4 text-sm leading-7 text-green-900">
+                                {sessionClosed and (<p><span className="font-bold">Session closed.</span> No personal details were retained by this demo flow. For case-specific strategy, contact a licensed immigration attorney or accredited representative now.</p>) or (<p>When the user ends the session, the assistant will confirm that no personal details were retained and remind them to seek licensed legal help for case strategy.</p>)}
+                            </div>
+                            <div className="mt-4 flex gap-3">
+                                <button className="rounded-full bg-green-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-800" onClick={closeSession}><span>End session</span></button>
+                                <button className="rounded-full border border-border bg-white px-5 py-3 text-sm font-semibold text-gray-800 transition hover:bg-card-hover" onClick={reopenSession}><span>Reset</span></button>
+                            </div>
+                        </div>
+
+                        <div className="rounded-3xl border border-border bg-card p-6 shadow-card">
                             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Real-time language translation</p>
-                            <p className="mt-2 text-sm leading-6 text-gray-700">The assistant keeps the full crisis flow in the user’s language, not just the interface.</p>
-                            <div className="mt-4 grid grid-cols-2 gap-2">
-                                <button className={"rounded-2xl border px-4 py-3 text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "english" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={setEnglish}><span>English</span></button>
-                                <button className={"rounded-2xl border px-4 py-3 text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "spanish" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={setSpanish}><span>Español</span></button>
-                                <button className={"rounded-2xl border px-4 py-3 text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "french" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={setFrench}><span>Français</span></button>
-                                <button className={"rounded-2xl border px-4 py-3 text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "arabic" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={setArabic}><span>العربية</span></button>
+                            <p className="mt-2 text-sm leading-6 text-gray-700">The assistant keeps the full crisis flow in the user’s language, not just the interface. Search and switch across a broad language list.</p>
+                            <div className="mt-4 rounded-2xl border border-border bg-slate-50 p-4">
+                                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">Search language</label>
+                                <input className="mt-2 w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200" value={languageSearch} onChange={searchLanguage} placeholder="Type a language name" />
+                                <div className="mt-4 grid max-h-72 grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                                    {languageMatches("english", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "english" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseEnglish}><span>English</span></button>)}
+                                    {languageMatches("spanish", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "spanish" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseSpanish}><span>Español</span></button>)}
+                                    {languageMatches("french", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "french" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseFrench}><span>Français</span></button>)}
+                                    {languageMatches("arabic", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "arabic" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseArabic}><span>العربية</span></button>)}
+                                    {languageMatches("portuguese", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "portuguese" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={choosePortuguese}><span>Português</span></button>)}
+                                    {languageMatches("mandarin", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "mandarin" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseMandarin}><span>中文（普通话）</span></button>)}
+                                    {languageMatches("cantonese", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "cantonese" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseCantonese}><span>中文（廣東話）</span></button>)}
+                                    {languageMatches("hindi", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "hindi" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseHindi}><span>हिन्दी</span></button>)}
+                                    {languageMatches("urdu", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "urdu" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseUrdu}><span>اردو</span></button>)}
+                                    {languageMatches("bengali", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "bengali" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseBengali}><span>বাংলা</span></button>)}
+                                    {languageMatches("punjabi", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "punjabi" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={choosePunjabi}><span>ਪੰਜਾਬੀ</span></button>)}
+                                    {languageMatches("russian", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "russian" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseRussian}><span>Русский</span></button>)}
+                                    {languageMatches("ukrainian", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "ukrainian" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseUkrainian}><span>Українська</span></button>)}
+                                    {languageMatches("korean", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "korean" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseKorean}><span>한국어</span></button>)}
+                                    {languageMatches("vietnamese", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "vietnamese" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseVietnamese}><span>Tiếng Việt</span></button>)}
+                                    {languageMatches("tagalog", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "tagalog" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseTagalog}><span>Tagalog</span></button>)}
+                                    {languageMatches("haitian_creole", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "haitian_creole" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseHaitianCreole}><span>Kreyòl Ayisyen</span></button>)}
+                                    {languageMatches("somali", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "somali" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseSomali}><span>Soomaali</span></button>)}
+                                    {languageMatches("swahili", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "swahili" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseSwahili}><span>Kiswahili</span></button>)}
+                                    {languageMatches("farsi", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "farsi" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseFarsi}><span>فارسی</span></button>)}
+                                    {languageMatches("turkish", languageSearch) and (<button className={"rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition " + ("border-blue-600 bg-blue-600 text-white" if selectedLanguage == "turkish" else "border-border bg-white text-gray-800 hover:bg-card-hover")} onClick={chooseTurkish}><span>Türkçe</span></button>)}
+                                </div>
                             </div>
                             <div className="mt-4 rounded-2xl bg-blue-50 p-4">
                                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Translated urgent message</p>
@@ -322,38 +546,24 @@ cl def:pub app() -> JsxElement {
                     </div>
                 </div>
 
-                <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                    <div className="rounded-3xl border border-border bg-gray-900 p-6 text-white shadow-card">
-                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-300">Emergency legal contacts</p>
-                        <div className="mt-4 grid gap-4 sm:grid-cols-2 text-sm leading-6 text-gray-200">
-                            <div>
-                                <p className="font-bold text-white">RAICES</p>
-                                <p>raicestexas.org</p>
-                            </div>
-                            <div>
-                                <p className="font-bold text-white">ACLU Immigrants’ Rights</p>
-                                <p>aclu.org/issues/immigrants-rights</p>
-                            </div>
-                            <div>
-                                <p className="font-bold text-white">National Immigration Legal Services Directory</p>
-                                <p>immigrationadvocates.org/nonprofit/legaldirectory</p>
-                            </div>
-                            <div>
-                                <p className="font-bold text-white">CLINIC legal help directory</p>
-                                <p>cliniclegal.org/find-legal-help</p>
-                            </div>
+                <div className="mt-6 rounded-3xl border border-border bg-gray-900 p-6 text-white shadow-card">
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-300">Emergency legal contacts</p>
+                    <div className="mt-4 grid gap-4 text-sm leading-6 text-gray-200 sm:grid-cols-2">
+                        <div>
+                            <p className="font-bold text-white">RAICES</p>
+                            <p>raicestexas.org</p>
                         </div>
-                    </div>
-
-                    <div className="rounded-3xl border border-border bg-card p-6 shadow-card">
-                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-green-700">Session auto-erase</p>
-                        <p className="mt-2 text-sm leading-6 text-gray-700">At the end of every session, the assistant should clearly confirm that no personal data was retained.</p>
-                        <div className="mt-4 rounded-2xl bg-green-50 p-4 text-sm leading-7 text-green-900">
-                            {sessionClosed and (<p><span className="font-bold">Session closed.</span> No personal details were retained by this demo flow. For case-specific strategy, contact a licensed immigration attorney or accredited representative now.</p>) or (<p>When the user ends the session, the assistant will confirm that no personal details were retained and remind them to seek licensed legal help for case strategy.</p>)}
+                        <div>
+                            <p className="font-bold text-white">ACLU Immigrants’ Rights</p>
+                            <p>aclu.org/issues/immigrants-rights</p>
                         </div>
-                        <div className="mt-4 flex gap-3">
-                            <button className="rounded-full bg-green-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-800" onClick={closeSession}><span>End session</span></button>
-                            <button className="rounded-full border border-border bg-white px-5 py-3 text-sm font-semibold text-gray-800 transition hover:bg-card-hover" onClick={reopenSession}><span>Reset</span></button>
+                        <div>
+                            <p className="font-bold text-white">National Immigration Legal Services Directory</p>
+                            <p>immigrationadvocates.org/nonprofit/legaldirectory</p>
+                        </div>
+                        <div>
+                            <p className="font-bold text-white">CLINIC legal help directory</p>
+                            <p>cliniclegal.org/find-legal-help</p>
                         </div>
                     </div>
                 </div>
