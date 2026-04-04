@@ -511,7 +511,8 @@ def:pub app() -> JsxElement {
                             </div>
                             <div className="max-w-[90%] rounded-2xl bg-white/10 px-4 py-3 text-sm leading-6 text-white shadow-soft">
                                 <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">{t("assistant")}</p>
-                                <p>{isLoading ? t("Analyzing your situation...") : lastAssistantMessage}</p>
+                                {isLoading and <p>{t("Analyzing your situation...")}</p>}
+                                {not isLoading and <p>{lastAssistantMessage}</p>}
                             </div>
                         </div>
                         <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
