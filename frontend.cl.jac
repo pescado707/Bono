@@ -1,4 +1,4 @@
-import from "@jac/runtime" { JsxElement };
+import from "@jac/runtime" { JsxElement }
 
 def:pub app() -> JsxElement {
     has selectedScenario: str = "ice";
