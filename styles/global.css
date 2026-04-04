@@ -1,30 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --color-background: #fffaf7;
+    --color-foreground: #1f2937;
+    --color-card: #ffffff;
+    --color-card-hover: #fff7ed;
+    --color-primary: #b91c1c;
+    --color-primary-foreground: #ffffff;
+    --color-secondary: #1d4ed8;
+    --color-secondary-foreground: #ffffff;
+    --color-accent: #f59e0b;
+    --color-muted: #fef2f2;
+    --color-muted-foreground: #6b7280;
+    --color-border: #fed7aa;
+    --color-success: #166534;
+    --color-warning: #b45309;
+    --shadow-soft: 0 10px 30px -18px rgba(185, 28, 28, 0.28);
+    --shadow-card: 0 18px 45px -24px rgba(31, 41, 55, 0.22);
+    --radius-sm: 0.375rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1.25rem;
+    --radius-full: 9999px;
 }
 
-/* Logo drop-shadow hover — not expressible with Tailwind utilities */
-.logo-vite:hover {
-  filter: drop-shadow(0 0 1.5rem #a855f7aa);
+.dark {
+    --color-background: #111827;
+    --color-foreground: #f9fafb;
+    --color-card: #1f2937;
+    --color-card-hover: #374151;
+    --color-primary: #ef4444;
+    --color-secondary: #60a5fa;
+    --color-muted: #1f2937;
+    --color-muted-foreground: #d1d5db;
+    --color-border: #4b5563;
 }
 
-.logo-jaseci:hover {
-  filter: drop-shadow(0 0 1.5rem #f97316aa);
+html, body, #root {
+    min-height: 100vh;
 }
 
-/* Gradient text — requires -webkit-text-fill-color which Tailwind can't set */
-.gradient-text {
-  background: linear-gradient(135deg, #a855f7, #f97316);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+body {
+    margin: 0;
+    background:
+        radial-gradient(circle at top, rgba(251, 191, 36, 0.18), transparent 30%),
+        linear-gradient(180deg, #fffaf7 0%, #fff7ed 45%, #ffffff 100%);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
 }
