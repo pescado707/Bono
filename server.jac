@@ -34,15 +34,11 @@ node LegalNode {
     has is_done: bool = False;
     has final_summary: str = "";
 
-    can retrieve_value(prompt: str) -> str {
-        # In production: query a vectorstore with prompt + dataset filter
+    def retrieve_value(prompt: str) -> str {
         return "Mock legal document content relevant to: " + prompt;
     }
 
-    can generate_summary() -> str {
-        context = self.retrieve_value(
-            "summarize advice and links for " + self.label + " based on legal documents"
-        );
+    def generate_summary() -> str {
         self.final_summary = (
             "Final Summary for " + self.label + ":\n\n"
             + "Advice: Based on USCIS guidelines (Section 214 of INA), ensure all documents are submitted.\n\n"
@@ -55,7 +51,7 @@ node LegalNode {
         return self.final_summary;
     }
 
-    can update_value(new_value: str) -> None {
+    def update_value(new_value: str) -> None {
         self.history.append({
             "previous": self.value,
             "timestamp": "now"
@@ -65,7 +61,7 @@ node LegalNode {
         self.loop_count += 1;
     }
 
-    can switch_model(new_model: str) -> None {
+    def switch_model(new_model: str) -> None {
         allowed = [
             "claude-haiku-4-5-20251001",
             "claude-sonnet-4-6",
@@ -79,11 +75,11 @@ node LegalNode {
         }
     }
 
-    can get_history() -> list {
+    def get_history() -> list {
         return self.history;
     }
 
-    can reset() -> None {
+    def reset() -> None {
         self.history = [];
         self.value = "";
         self.is_ready = False;
@@ -136,145 +132,49 @@ walker AnalyzeSituation {
     has results: dict = {};
     has retrieved_context: str = "";
 
-<<<<<<< HEAD
-    can start with `root entry {
-        ui = self.user_input.lower();
-
-        if "arrest" in ui or "raid" in ui or "ice" in ui or "door" in ui {
-            self.relevant_aspects = [
-                LegalAspect.SITUATION_SUMMARY,
-                LegalAspect.YOUR_RIGHTS,
-                LegalAspect.TO_DO,
-                LegalAspect.NOT_TO_DO,
-                LegalAspect.WHO_CAN_HELP
-            ];
-        } elif "detention" in ui or "jail" in ui {
-            self.relevant_aspects = [
-                LegalAspect.SITUATION_SUMMARY,
-                LegalAspect.YOUR_RIGHTS,
-                LegalAspect.TO_DO,
-                LegalAspect.QUESTIONS,
-                LegalAspect.WHO_CAN_HELP,
-                LegalAspect.WHAT_HAPPENS_NEXT
-            ];
-        } elif "order" in ui or "deport" in ui or "notice" in ui {
-            self.relevant_aspects = [
-                LegalAspect.SITUATION_SUMMARY,
-                LegalAspect.YOUR_RIGHTS,
-                LegalAspect.TO_DO,
-                LegalAspect.NOT_TO_DO,
-                LegalAspect.QUESTIONS,
-                LegalAspect.WHAT_HAPPENS_NEXT
-            ];
-        } elif "family" in ui or "missing" in ui {
-            self.relevant_aspects = [
-                LegalAspect.SITUATION_SUMMARY,
-                LegalAspect.QUESTIONS,
-                LegalAspect.WHO_CAN_HELP,
-                LegalAspect.WHAT_HAPPENS_NEXT
-            ];
-        } else {
-            self.relevant_aspects = [
-                LegalAspect.SITUATION_SUMMARY,
-                LegalAspect.QUESTIONS
-            ];
-        }
-
-        # In production: vectorstore.search(query=self.user_input, top_k=3)
-        self.retrieved_context = "Mock legal document content.\n\n";
-
-        visit [-->];
-        report self.results;
-    }
-
-    can handle with LegalNode entry {
-        if here.aspect not in self.relevant_aspects {
-            visit [-->];
-            return;
-        }
-        here.reset();
-        prompt = self.build_prompt(here.label);
-        here.update_value(prompt);
-        self.results[here.label] = {
-            "value": here.value,
-            "model": here.model,
-            "loop_count": here.loop_count,
-            "sources": []
-=======
-    can visit_root with root entry {
-        aspect_labels = [
-            "situation_summary", "your_rights", "to_do", "not_to_do", 
-            "questions", "legal_jargon", "who_can_help", "what_happens_next"
-        ];
-        
-        for label in aspect_labels {
-            self.results[label] = {"value": "Processing...", "status": "pending"};
-        }
-
-        # Super RAG time
-        relevant_chunks = vectorstore.search(query=self.user_input, top_k=5);
-        self.retrieved_context = "";
-        for chunk in relevant_chunks {
-            self.retrieved_context += chunk.content + "\n\n";
-        }
+    can visit_root with `root entry {
+        # Mock RAG context — replace with vectorstore.search when plugin is ready
+        self.retrieved_context = (
+            "You have the right to remain silent. "
+            + "Do not sign anything without a lawyer. "
+            + "You can ask to contact your consulate if foreign-born."
+        );
 
         visit [-->];
     }
 
     can visit_node with LegalNode entry {
+        here.reset();
         node_prompt = self.get_node_specific_prompt(here.label);
-        here.update_value(node_prompt); 
-        
+        here.update_value(node_prompt);
+
         self.results[here.label] = {
             "value": here.value,
             "model": here.model,
-            "is_ready": here.is_ready
->>>>>>> 47e10f8 (hardcoding is no more more)
+            "is_ready": here.is_ready,
+            "loop_count": here.loop_count
         };
-        
+
         visit [-->];
     }
 
-<<<<<<< HEAD
-    can build_prompt(role: str) -> str {
-        ui = self.user_input;
-        if role == "situation_summary" {
-            return "Summarize this legal situation in 2 plain sentences: " + ui;
-        } elif role == "your_rights" {
-            return "List the 2-3 most critical legal rights that apply to: " + ui;
-        } elif role == "to_do" {
-            return "Most important action in the next 60 minutes given: " + ui;
-        } elif role == "not_to_do" {
-            return "Most dangerous mistake to avoid given: " + ui;
-        } elif role == "questions" {
-            return "What are the 2 most important follow-up questions still needed given: " + ui;
-        } elif role == "legal_jargon" {
-            return "Explain any legal terms relevant to: " + ui;
-        } elif role == "who_can_help" {
-            return "Who specifically should this person contact given: " + ui;
-        } elif role == "what_happens_next" {
-            return "What does the legal process look like from here given: " + ui;
-        } else {
-            return ui;
-        }
-=======
-    can get_node_specific_prompt(label: str) -> str {
+    can report_results with `root exit {
+        report self.results;
+    }
+
+    def get_node_specific_prompt(label: str) -> str {
         prompts = {
             "situation_summary": "Summarize the legal urgency of this input.",
             "your_rights": "What constitutional rights apply here?",
             "to_do": "What is the immediate first step?",
             "not_to_do": "What actions should be avoided to prevent self-incrimination?",
-            "questions": "I need more info to give better advice. Based on the user's input, what is the SINGLE most important follow-up question I should ask them to better understand their legal risk?",
-            "legal_jargon": "Define any complex terms found in this scenario.",
+            "questions": "What is the single most important follow-up question to better understand the legal risk?",
+            "legal_jargon": "Define any complex legal terms found in this scenario.",
             "who_can_help": "List types of organizations or legal aid needed.",
             "what_happens_next": "What is the typical timeline for this legal process?"
         };
-        return f"{prompts.get(label, '')} User Input: {self.user_input} Context: {self.retrieved_context}";
-    }
-
-    can report_results with root exit {
-        report self.results;
->>>>>>> 47e10f8 (hardcoding is no more more)
+        base = prompts.get(label, "");
+        return base + " User Input: " + self.user_input + " Context: " + self.retrieved_context;
     }
 }
 
@@ -296,7 +196,6 @@ walker FollowUp {
             + self.follow_up_answer
         );
 
-        # Snapshot current node values before traversal
         for n in [-->] {
             if n is LegalNode {
                 self.node_outputs[n.label] = n.value;
@@ -304,14 +203,6 @@ walker FollowUp {
         }
 
         visit [-->];
-
-        if self.limit_reached {
-            summarizer = Summarize(
-                node_outputs=self.node_outputs,
-                accumulated_context=self.accumulated_context
-            );
-            spawn root with summarizer;
-        }
     }
 
     can collect with LegalNode entry {
@@ -325,7 +216,6 @@ walker FollowUp {
         prompt = self.build_prompt(here.label);
         here.update_value(prompt);
 
-        # If questions node signals completion, finalize
         if here.label == "questions" {
             val_lower = here.value.lower();
             if "no more" in val_lower or "sufficient" in val_lower {
@@ -346,7 +236,22 @@ walker FollowUp {
         visit [-->];
     }
 
-    can build_prompt(role: str) -> str {
+    can finish with `root exit {
+        if self.limit_reached {
+            summarizer = Summarize(
+                node_outputs=self.node_outputs,
+                accumulated_context=self.accumulated_context
+            );
+            root spawn summarizer;
+        } else {
+            report {
+                "results": self.results,
+                "limit_reached": False
+            };
+        }
+    }
+
+    def build_prompt(role: str) -> str {
         ctx = self.accumulated_context;
         if role == "situation_summary" {
             return "Summarize this legal situation in 2 plain sentences, incorporating the latest context: " + ctx;
@@ -378,12 +283,12 @@ walker Summarize {
     has summary: str = "";
 
     can build_summary with `root entry {
-        situation   = self.node_outputs.get("situation_summary", "");
-        rights      = self.node_outputs.get("your_rights", "");
-        to_do       = self.node_outputs.get("to_do", "");
-        not_to_do   = self.node_outputs.get("not_to_do", "");
-        who         = self.node_outputs.get("who_can_help", "");
-        next_steps  = self.node_outputs.get("what_happens_next", "");
+        situation  = self.node_outputs.get("situation_summary", "");
+        rights     = self.node_outputs.get("your_rights", "");
+        to_do      = self.node_outputs.get("to_do", "");
+        not_to_do  = self.node_outputs.get("not_to_do", "");
+        who        = self.node_outputs.get("who_can_help", "");
+        next_steps = self.node_outputs.get("what_happens_next", "");
 
         self.summary = (
             "CASE SUMMARY\n\n"
@@ -396,7 +301,6 @@ walker Summarize {
             + "Full context gathered: " + self.accumulated_context
         );
 
-        # Write into the SummaryNode
         for n in [-->] {
             if n is SummaryNode {
                 n.value = self.summary;
@@ -440,14 +344,20 @@ walker GetHistory {
 # ---------------------------------------------------------------------------
 
 walker ResetAll {
+    has results: list = [];
+
     can start with `root entry {
         visit [-->];
     }
 
     can do_reset with LegalNode entry {
         here.reset();
-        report {"label": here.label, "status": "reset"};
+        self.results.append({"label": here.label, "status": "reset"});
         visit [-->];
+    }
+
+    can finish with `root exit {
+        report self.results;
     }
 }
 
@@ -467,12 +377,11 @@ walker IngestDocument {
                 topic=self.topic
             );
             here ++> doc;
-            # In production: vectorstore.add(text=chunk, metadata={...})
         }
         report {"status": "ingested", "chunks": len(chunks)};
     }
 
-    can chunk_text(text: str) -> list {
+    def chunk_text(text: str) -> list {
         words = text.split(" ");
         chunks = [];
         chunk_size = 200;
@@ -534,12 +443,4 @@ with entry {
     root ++> who_can_help_node;
     root ++> what_happens_next_node;
     root ++> case_summary;
-
-    # Example: run an analysis
-    analyzer = AnalyzeSituation(
-        user_input="ICE agents are at my door. What should I do?"
-    );
-    spawn root with analyzer;
-    print("Analysis complete. Results:");
-    print(analyzer.results);
 }
