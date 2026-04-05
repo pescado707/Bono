@@ -136,7 +136,7 @@ node DocumentChunk {
 # Walkers
 # ---------------------------------------------------------------------------
 
-walker SwitchModel {
+walker:pub SwitchModel {
     has target_label: str = "";
     has new_model: str = "";
 
@@ -158,7 +158,7 @@ walker SwitchModel {
 
 # ---------------------------------------------------------------------------
 
-walker AnalyzeSituation {
+walker:pub AnalyzeSituation {
     has user_input: str = "";
     has results: dict = {};
 
@@ -188,7 +188,7 @@ walker AnalyzeSituation {
 
 # ---------------------------------------------------------------------------
 
-walker FollowUp {
+walker:pub FollowUp {
     has original_input: str = "";
     has follow_up_answer: str = "";
     has accumulated_context: str = "";
@@ -334,7 +334,7 @@ walker GetHistory {
 
 # ---------------------------------------------------------------------------
 
-walker ResetAll {
+walker:pub ResetAll {
     has results: list = [];
 
     can start with `root entry {

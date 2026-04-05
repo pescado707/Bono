@@ -42,9 +42,8 @@ name = "test"
 description = "Jac IDE snapshot for test"
 
 [llm]
-provider = "anthropic"
-model = "claude-haiku-4-5-20251001"
-api_key_env = "ANTHROPIC_API_KEY"
+provider = "ollama"
+model = "qwen2.5"
 
 [plugins.byllm.model]
 # Ollama (local): install from https://ollama.com, then run `ollama pull llama3.2`
