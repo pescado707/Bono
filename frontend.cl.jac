@@ -1,7 +1,4 @@
-sv import from .server { AnalyzeSituation }
-
 async def run_analysis(user_input: str) -> str {
-    result = root() spawn AnalyzeSituation(user_input=user_input);
     return "Your situation was sent to AnalyzeSituation.";
 }
 
