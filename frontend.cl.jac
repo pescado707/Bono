@@ -96,15 +96,15 @@ def:pub app() -> JsxElement {
     }
 
     def unpackResults(results: dict) -> None {
-        situationSummary = results.get("situation_summary", {}).get("value", "");
-        yourRights = results.get("your_rights", {}).get("value", "");
-        toDo = results.get("to_do", {}).get("value", "");
-        notToDo = results.get("not_to_do", {}).get("value", "");
-        questions = results.get("questions", {}).get("value", "");
-        legalJargon = results.get("legal_jargon", {}).get("value", "");
-        whoCanHelp = results.get("who_can_help", {}).get("value", "");
-        whatHappensNext = results.get("what_happens_next", {}).get("value", "");
-        lastAssistantMessage = questions;
+        situationSummary = results.get("case_assessment", {}).get("value", "");
+        yourRights = results.get("rights_protections", {}).get("value", "");
+        toDo = results.get("urgent_steps", {}).get("value", "");
+        notToDo = results.get("critical_warnings", {}).get("value", "");
+        questions = results.get("follow_up_questions", {}).get("value", "");
+        legalJargon = results.get("legal_glossary", {}).get("value", "");
+        whoCanHelp = results.get("help_contacts", {}).get("value", "");
+        whatHappensNext = results.get("process_outlook", {}).get("value", "");
+        lastAssistantMessage = questions if questions != "" else "Analysis complete. See the nodes below.";
         nodesExpanded = True;
         isFollowUp = True;
     }
@@ -123,8 +123,9 @@ def:pub app() -> JsxElement {
             "body": JSON.stringify({"user_input": originalInput})
         }).then(lambda r: any -> any { return r.json(); })
         .then(lambda data: any -> None {
-            if data.reports and len(data.reports) > 0 {
-                unpackResults(data.reports[0]);
+            reports = data.reports if data.reports else [];
+            if len(reports) > 0 {
+                unpackResults(reports[0]);
             } else {
                 lastAssistantMessage = "Something went wrong. Please try again.";
             }
@@ -160,7 +161,7 @@ def:pub app() -> JsxElement {
                     isFollowUp = False;
                     lastAssistantMessage = "Summary complete. Share this with a lawyer.";
                 } else {
-                    unpackResults(result.get("results", {}));
+                    unpackResults(result.get("results", result));
                 }
             }
             followUpInput = "";
