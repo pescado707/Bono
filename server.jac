@@ -6,7 +6,7 @@ Uses walker/node/enum graph primitives with correct Jac syntax.
 import os;
 
 # ---------------------------------------------------------------------------
-# Enum
+# Enum!
 # ---------------------------------------------------------------------------
 
 enum ImmigrationAspect {
