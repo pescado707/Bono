@@ -178,7 +178,7 @@ walker:pub AnalyzeSituation {
             "loop_count": here.loop_count
         };
 
-        visit [-->];
+        # visit [-->];
     }
 
     can report_results with Root exit {
