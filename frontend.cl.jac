@@ -1,7 +1,3 @@
-sv import from ...server {
-    AnalyzeSituation, FollowUp, SwitchModel, ResetAll, GetHistory
-}
-
 def:pub app() -> JsxElement {
     has selectedMode: str = "text";
     has selectedLanguage: str = "english";
@@ -120,19 +116,25 @@ def:pub app() -> JsxElement {
         isLoading = True;
         showSummary = False;
         originalInput = textPrompt.strip();
-        lastAssistantMessage = "Analyzing your situation...";
 
-        result = await root spawn AnalyzeSituation(user_input=originalInput);
-
-        if result.reports and len(result.reports) > 0 {
-            unpackResults(result.reports[0]);
-        } else {
-            lastAssistantMessage = "Something went wrong. Please try again.";
-        }
-
-        showPrompt = False;
-        textPrompt = "";
-        isLoading = False;
+        fetch("/walker/AnalyzeSituation", {
+            "method": "POST",
+            "headers": {"Content-Type": "application/json"},
+            "body": JSON.stringify({"user_input": originalInput})
+        }).then(lambda r: any -> any { return r.json(); })
+        .then(lambda data: any -> None {
+            if data.reports and len(data.reports) > 0 {
+                unpackResults(data.reports[0]);
+            } else {
+                lastAssistantMessage = "Something went wrong. Please try again.";
+            }
+            showPrompt = False;
+            textPrompt = "";
+            isLoading = False;
+        }).catch(lambda err: any -> None {
+            lastAssistantMessage = "Connection error. Please try again.";
+            isLoading = False;
+        });
     }
 
     async def submitFollowUp() -> None {
@@ -140,51 +142,69 @@ def:pub app() -> JsxElement {
             return;
         }
         isLoading = True;
-        lastAssistantMessage = "Analyzing your follow-up...";
 
-        result = await root spawn FollowUp(
-            original_input=originalInput,
-            follow_up_answer=followUpInput.strip()
-        );
-
-        if result.reports and len(result.reports) > 0 {
-            data = result.reports[0];
-            if data.get("limit_reached", False) {
-                caseSummary = data.get("summary", "");
-                showSummary = True;
-                isFollowUp = False;
-                lastAssistantMessage = "Summary complete. Share this with a lawyer.";
-            } else {
-                unpackResults(data.get("results", {}));
+        fetch("/walker/FollowUp", {
+            "method": "POST",
+            "headers": {"Content-Type": "application/json"},
+            "body": JSON.stringify({
+                "original_input": originalInput,
+                "follow_up_answer": followUpInput.strip()
+            })
+        }).then(lambda r: any -> any { return r.json(); })
+        .then(lambda data: any -> None {
+            if data.reports and len(data.reports) > 0 {
+                result = data.reports[0];
+                if result.get("limit_reached", False) {
+                    caseSummary = result.get("summary", "");
+                    showSummary = True;
+                    isFollowUp = False;
+                    lastAssistantMessage = "Summary complete. Share this with a lawyer.";
+                } else {
+                    unpackResults(result.get("results", {}));
+                }
             }
-        }
-
-        followUpInput = "";
-        isLoading = False;
+            followUpInput = "";
+            isLoading = False;
+        }).catch(lambda err: any -> None {
+            lastAssistantMessage = "Connection error. Please try again.";
+            isLoading = False;
+        });
     }
 
     async def switchModel(new_model: str) -> None {
         selectedModel = new_model;
-        await root spawn SwitchModel(target_label="all", new_model=new_model);
-        lastAssistantMessage = "Model switched to " + new_model + ". Send a new prompt to use it.";
+        fetch("/walker/SwitchModel", {
+            "method": "POST",
+            "headers": {"Content-Type": "application/json"},
+            "body": JSON.stringify({"target_label": "all", "new_model": new_model})
+        }).then(lambda r: any -> any { return r.json(); })
+        .then(lambda data: any -> None {
+            lastAssistantMessage = "Model switched to " + new_model + ".";
+        });
     }
 
     async def resetSession() -> None {
-        await root spawn ResetAll();
-        situationSummary = "";
-        yourRights = "";
-        toDo = "";
-        notToDo = "";
-        questions = "";
-        legalJargon = "";
-        whoCanHelp = "";
-        whatHappensNext = "";
-        caseSummary = "";
-        nodesExpanded = False;
-        showSummary = False;
-        isFollowUp = False;
-        originalInput = "";
-        lastAssistantMessage = "Session reset. Press GO to start again.";
+        fetch("/walker/ResetAll", {
+            "method": "POST",
+            "headers": {"Content-Type": "application/json"},
+            "body": JSON.stringify({})
+        }).then(lambda r: any -> any { return r.json(); })
+        .then(lambda data: any -> None {
+            situationSummary = "";
+            yourRights = "";
+            toDo = "";
+            notToDo = "";
+            questions = "";
+            legalJargon = "";
+            whoCanHelp = "";
+            whatHappensNext = "";
+            caseSummary = "";
+            nodesExpanded = False;
+            showSummary = False;
+            isFollowUp = False;
+            originalInput = "";
+            lastAssistantMessage = "Session reset. Press GO to start again.";
+        });
     }
 
     return (
