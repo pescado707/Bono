@@ -37,6 +37,7 @@ node LegalNode {
     has final_summary: str = "";
 
     def load_context() -> str {
+        import os;
         docs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs");
         doc_path = os.path.join(docs_dir, self.label + ".md");
         if os.path.exists(doc_path) {
@@ -53,8 +54,15 @@ node LegalNode {
 
         url = "http://localhost:11434/api/generate";
         
-        # Construct the prompt
-        full_prompt = f"Context: {context}\n\nUser Situation: {user_situation}\n\nProvide legal guidance for the {self.label} section.";
+        # --- CUSTOM TASK LOGIC ---
+        # This ensures 'follow_up_questions' actually generates questions
+        task_instruction = f"Provide legal guidance for the {self.label} section.";
+        
+        if self.label == "follow_up_questions" {
+            task_instruction = "Do not provide a summary. Instead, generate a list of 3-5 critical follow-up questions the user should ask an immigration attorney based on their situation.";
+        }
+        
+        full_prompt = f"Context from USCIS: {context}\n\nUser Situation: {user_situation}\n\nTask: {task_instruction}";
 
         payload = {
             "model": self.model,
@@ -63,21 +71,21 @@ node LegalNode {
         };
 
         try {
-            response = requests.post(url, json=payload, timeout=30);
+            response = requests.post(url, json=payload, timeout=45);
             if response.status_code == 200 {
                 return response.json().get("response", "No response from model.");
             } else {
                 return f"Error: Server returned status {response.status_code}";
             }
         } except Exception as e {
-            return f"Connection Error: {str(e)}. Is Ollama running?";
+            # This keeps the app from crashing and tells the user exactly what's wrong
+            return f"Ollama Connection Error. Ensure 'ollama serve' is running and you have downloaded {self.model}.";
         }
     }
-    # def get_follow_up_questions(user_situation: str, context: str) -> list[str] by llm();
 
     def retrieve_value(prompt: str) -> str {
         context = self.load_context();
-        # Call the new Python-based method
+        # Calls the Python method which now handles the 'follow_up' logic internally
         new_val = self.get_advice_py(user_situation=prompt, context=context);
         return new_val;
     }
@@ -89,11 +97,8 @@ node LegalNode {
             + "Key Resources:\n"
             + "- USCIS main portal: uscis.gov\n"
             + "- ICE detainee locator: locator.ice.gov\n"
-            + "- Asylum info: uscis.gov/humanitarian/refugees-asylum\n"
-            + "- AILA attorney finder: aila.org/find-a-lawyer\n"
-            + "- Cite: INA Sections 208 (asylum), 240 (removal proceedings), 245 (adjustment of status)\n\n"
-            + "Critical: Do not miss any Notice to Appear (NTA) deadlines or immigration court dates.\n\n"
-            + "Do your own research and consult an immigration attorney."
+            + "- AILA attorney finder: aila.org/find-a-lawyer\n\n"
+            + "Critical: Do not miss any Notice to Appear (NTA) deadlines."
         );
         return self.final_summary;
     }
@@ -109,22 +114,11 @@ node LegalNode {
     }
 
     def switch_model(new_model: str) -> None {
-        allowed = [
-            "ollama",
-            "claude-haiku-4-5-20251001",
-            "claude-sonnet-4-6",
-            "claude-opus-4-6",
-            "gpt-4o",
-            "gpt-4o-mini",
-            "gemini-1.5-pro"
-        ];
+        # Updated allowed list to include your local qwen
+        allowed = ["qwen2.5", "llama3", "ollama", "gpt-4o", "gemini-1.5-pro"];
         if new_model in allowed {
             self.model = new_model;
         }
-    }
-
-    def get_history() -> list {
-        return self.history;
     }
 
     def reset() -> None {
