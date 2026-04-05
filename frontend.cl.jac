@@ -13,6 +13,9 @@ def:pub app() -> JsxElement {
     has voiceStatus: str = "Voice input ready";
     has lastUserMessage: str = "ICE is at my door right now.";
     has lastAssistantMessage: str = "This sounds like an active ICE encounter. Stay calm, remain silent, do not open the door unless they show a judicial warrant signed by a judge, and do not sign anything without a lawyer.";
+    has isFollowUp: bool = False;
+    has followUpInput: str = "";
+    has originalInput: str = "";
 
     def languageLabel(kind: str) -> str {
         if kind == "arabic" { return "العربية"; }
@@ -242,6 +245,51 @@ def:pub app() -> JsxElement {
         }, 1500);
     }
 
+    def submitFollowUp(answer: str) -> None {
+        fetch("/walker/FollowUp", {
+            "method": "POST",
+            "headers": {"Content-Type": "application/json"},
+            "body": JSON.stringify({
+                "original_input": lastUserMessage,
+                "follow_up_answer": answer
+            })
+        }).then(lambda r: any -> any { return r.json(); })
+        .then(lambda data: any -> None {
+            results = data.reports[0];
+            if results["limit_reached"] {
+                lastAssistantMessage = results["summary"];
+                isFollowUp = False;
+            } else {
+                situationSummary = results["situation_summary"]["value"];
+                yourRights = results["your_rights"]["value"];
+                toDo = results["to_do"]["value"];
+                notToDo = results["not_to_do"]["value"];
+                questions = results["questions"]["value"];
+                legalJargon = results["legal_jargon"]["value"];
+                whoCanHelp = results["who_can_help"]["value"];
+                whatHappensNext = results["what_happens_next"]["value"];
+                lastAssistantMessage = questions;
+                isFollowUp = True;
+            }
+            isLoading = False;
+        });
+    }
+
+    def switchModel(newModel: str) -> None {
+        selectedModel = newModel;
+        fetch("/walker/SwitchModel", {
+            "method": "POST",
+            "headers": {"Content-Type": "application/json"},
+            "body": JSON.stringify({
+                "target_label": "all",
+                "new_model": newModel
+            })
+        }).then(lambda r: any -> any { return r.json(); })
+        .then(lambda data: any -> None {
+            voiceStatus = "Model switched to " + newModel;
+        });
+    }
+
     if panicMode {
         return (
             <div className="min-h-screen bg-[#f7efe2] text-slate-900">
@@ -424,11 +472,40 @@ def:pub app() -> JsxElement {
                             {not isLoading and <p>{lastAssistantMessage}</p>}
                         </div>
                     </div>
-                    <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
-                        <input className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30" value={chatInput} onChange={updateChatInput} placeholder={t("Type what is happening right now")} />
-                        <button className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400" onClick={startVoiceInput}><span>{t("Voice input")}</span></button>
-                        <button className="rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300" onClick={sendChat}><span>{t("Send")}</span></button>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                            className={selectedModel == "claude-haiku-4-5-20251001" ? "rounded-full bg-cyan-400 px-3 py-1 text-xs font-semibold text-slate-950" : "rounded-full border border-white/20 px-3 py-1 text-xs font-semibold text-slate-300 hover:bg-white/10"}
+                            onClick={lambda -> None { switchModel("claude-haiku-4-5-20251001"); }}>
+                            <span>Haiku — fast</span>
+                        </button>
+                        <button
+                            className={selectedModel == "claude-sonnet-4-6" ? "rounded-full bg-cyan-400 px-3 py-1 text-xs font-semibold text-slate-950" : "rounded-full border border-white/20 px-3 py-1 text-xs font-semibold text-slate-300 hover:bg-white/10"}
+                            onClick={lambda -> None { switchModel("claude-sonnet-4-6"); }}>
+                            <span>Sonnet — balanced</span>
+                        </button>
+                        <button
+                            className={selectedModel == "claude-opus-4-6" ? "rounded-full bg-cyan-400 px-3 py-1 text-xs font-semibold text-slate-950" : "rounded-full border border-white/20 px-3 py-1 text-xs font-semibold text-slate-300 hover:bg-white/10"}
+                            onClick={lambda -> None { switchModel("claude-opus-4-6"); }}>
+                            <span>Opus — most powerful</span>
+                        </button>
+                        <p className="ml-auto text-xs text-slate-400 self-center">Active: {selectedModel}</p>
                     </div>
+                    {not isFollowUp and
+                        <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+                            <input className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30" value={chatInput} onChange={updateChatInput} placeholder={t("Type what is happening right now")} />
+                            <button className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400" onClick={startVoiceInput}><span>{t("Voice input")}</span></button>
+                            <button className="rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300" onClick={sendChat}><span>{t("Send")}</span></button>
+                        </div>
+                    }
+                    {isFollowUp and
+                        <div className="mt-3 rounded-2xl border border-cyan-400/30 bg-white/5 p-4">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Answer the question above</p>
+                            <div className="mt-2 grid gap-3 lg:grid-cols-[1fr_auto]">
+                                <input className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30" value={followUpInput} onChange={updateFollowUpInput} placeholder="Type your answer here" />
+                                <button className="rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300" onClick={submitFollowUp}><span>Answer</span></button>
+                            </div>
+                        </div>
+                    }
                     <p className="mt-3 text-xs leading-5 text-slate-300">{voiceStatus}. {t("Current conversation language:")} {languageLabel(selectedLanguage)}.</p>
                 </div>
             </section>

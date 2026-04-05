@@ -48,6 +48,13 @@ node SummaryNode {
     has generated_at_loop: int = 0;
 }
 
+node DocumentChunk {
+    has content: str = "";
+    has source: str = "";
+    has topic: str = "";
+    has embedding: list = [];
+}
+
 walker SwitchModel {
     has target_label: str = "";
     has new_model: str = "";
@@ -71,8 +78,19 @@ walker SwitchModel {
 walker AnalyzeSituation {
     has user_input: str = "";
     has results: dict = {};
+    has retrieved_context: str = "";
 
     can visit with `root entry {
+        relevant_chunks = vectorstore.search(
+            query=self.user_input,
+            top_k=3
+        );
+
+        self.retrieved_context = "";
+        for chunk in relevant_chunks {
+            self.retrieved_context += chunk.content + "\n\n";
+        }
+
         for node in [-->] {
             if node is LegalNode {
                 node.reset();
@@ -81,7 +99,7 @@ walker AnalyzeSituation {
                     "value": node.value,
                     "model": node.model,
                     "loop_count": node.loop_count,
-                    "history_count": node.history.length
+                    "sources": relevant_chunks
                 };
             }
         }
@@ -89,17 +107,19 @@ walker AnalyzeSituation {
     }
 
     can get_prompt(role: str) -> str {
+        base = f"Use this legal reference material to inform your answer:\n\n{self.retrieved_context}\n\nUser situation: {self.user_input}\n\n";
+
         prompts = {
-            "situation_summary": f"Summarize this legal situation in 2 plain sentences: {self.user_input}",
-            "your_rights": f"List the 2-3 most critical legal rights that apply to this situation: {self.user_input}",
-            "to_do": f"What is the single most important action to take in the next 60 minutes given this situation: {self.user_input}",
-            "not_to_do": f"What is the most dangerous mistake someone could make in this situation and why: {self.user_input}",
-            "questions": f"What are the 2 most important follow-up questions needed to give better guidance on: {self.user_input}",
-            "legal_jargon": f"Identify and explain in plain language any legal terms relevant to: {self.user_input}",
-            "who_can_help": f"What specific type of lawyer or free resource should this person contact given: {self.user_input}",
-            "what_happens_next": f"Briefly describe what the legal process typically looks like from this point given: {self.user_input}"
+            "situation_summary": base + "Summarize this legal situation in 2 plain sentences.",
+            "your_rights": base + "List the 2-3 most critical legal rights that apply.",
+            "to_do": base + "What is the single most important action in the next 60 minutes.",
+            "not_to_do": base + "What is the most dangerous mistake to avoid and why.",
+            "questions": base + "What are the 2 most important follow-up questions still needed.",
+            "legal_jargon": base + "Explain any legal terms relevant to this situation in plain language.",
+            "who_can_help": base + "Who specifically should this person contact and what should they say.",
+            "what_happens_next": base + "What does the legal process typically look like from here."
         };
-        return prompts[role] if role in prompts else self.user_input;
+        return prompts[role] if role in prompts else base;
     }
 }
 
@@ -233,6 +253,43 @@ walker ResetAll {
         here.reset();
         report {"label": here.label, "status": "reset"};
         visit [-->];
+    }
+}
+
+walker IngestDocument {
+    has content: str = "";
+    has source: str = "";
+    has topic: str = "";
+
+    can visit with `root entry {
+        chunks = self.chunk_text(self.content);
+
+        for chunk in chunks {
+            doc = DocumentChunk(
+                content=chunk,
+                source=self.source,
+                topic=self.topic
+            );
+            root ++> doc;
+            vectorstore.add(
+                text=chunk,
+                metadata={"source": self.source, "topic": self.topic}
+            );
+        }
+        report {"status": "ingested", "chunks": chunks.length};
+    }
+
+    can chunk_text(text: str) -> list {
+        words = text.split(" ");
+        chunks = [];
+        chunk_size = 200;
+        i = 0;
+        while i < words.length {
+            chunk = words[i:i+chunk_size].join(" ");
+            chunks.append(chunk);
+            i += chunk_size;
+        }
+        return chunks;
     }
 }
 

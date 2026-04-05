@@ -37,9 +37,14 @@ name = "test"
 description = "Jac IDE snapshot for test"
 
 [plugins.jac]
-jac-lang = ["jaclang-anthropic"]
+jac-lang = ["jaclang-anthropic", "jac-splice-orc"]
 
 [llm]
 provider = "anthropic"
 model = "claude-haiku-4-5-20251001"
 api_key_env = "ANTHROPIC_API_KEY"
+
+[vectorstore]
+provider = "chroma"
+collection = "legal_docs"
+embedding_model = "text-embedding-3-small"
