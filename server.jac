@@ -20,6 +20,8 @@ node LegalNode {
     has model: str = "claude-haiku-4-5-20251001";
     has loop_count: int = 0;
     has dataset: str = "";
+    has is_done: bool = False;
+    has final_summary: str = "";
 
     can retrieve_value(prompt: str) -> str {
         search_params = {"query": prompt, "top_k": 5};
@@ -33,6 +35,13 @@ node LegalNode {
             context += chunk.content + "\n\n";
         }
         return context;
+    }
+
+    can generate_summary() -> str {
+        context = self.retrieve_value(f"summarize advice and links for {self.label} based on legal documents");
+        # Mock LLM response with citations
+        self.final_summary = f"Final Summary for {self.label}:\n\nAdvice: Based on USCIS guidelines (Section 214 of INA), ensure all documents are submitted.\n\nKey Links:\n- USCIS H-1B page: uscis.gov/working-in-the-united-states/permanent-workers/employment-based-immigration-first-preference-eb-1\n- Cite: INA Section 101(a)(15)(H)(i)\n\nLoopholes to check: Verify specialty occupation requirements to avoid denials.\n\nDo your own research with these sources.";
+        return self.final_summary;
     }
 
     can update_value(new_value: str) -> None {
@@ -187,12 +196,21 @@ walker FollowUp {
         }
 
         here.update_value(self.get_prompt(here.label));
+        
+        # Check if questions node indicates no more questions
+        if here.label == "questions" and ("no more" in here.value.lower() or "sufficient" in here.value.lower()) {
+            here.is_done = True;
+            here.generate_summary();
+        }
+        
         self.results[here.label] = {
             "value": here.value,
             "model": here.model,
             "loop_count": here.loop_count,
             "history_count": here.history.length,
-            "limit_reached": False
+            "limit_reached": False,
+            "is_done": here.is_done,
+            "final_summary": here.final_summary
         };
         visit [-->];
     }
