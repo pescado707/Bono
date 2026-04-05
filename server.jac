@@ -1,3 +1,5 @@
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+
 node LegalNode {
     has label: str = "";
     has value: str = "";
@@ -5,6 +7,17 @@ node LegalNode {
     has history: list = [];
     has model: str = "claude-haiku-4-5-20251001";
     has loop_count: int = 0;
+
+    can retrieve_value(prompt: str) -> str {
+    documents = SimpleDirectoryReader("data").load_data()
+
+    # 2. Automatically chunk, embed, and store them in memory
+    index = VectorStoreIndex.from_documents(documents)
+
+    # 3. Create a query engine and ask a question
+    query_engine = index.as_query_engine()
+    response = query_engine.query()
+    }
 
     can update_value(new_value: str) -> None {
         self.history.append({
