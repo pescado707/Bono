@@ -2,6 +2,7 @@ def:pub app() -> JsxElement {
     has isLoading: bool = False;
     has apiKey: str = "YOUR_KEY_HERE";
     has selectedScenario: str = "ice";
+    has selectedMode: str = "text";
     has selectedLanguage: str = "english";
     has languageSearch: str = "";
     has panicMode: bool = False;
@@ -182,12 +183,52 @@ def:pub app() -> JsxElement {
         return base + "border-transparent text-gray-800 hover:bg-card-hover " + extra;
     }
 
+    def modeButtonClass(kind: str) -> str {
+        base = "rounded-full border px-4 py-2 text-sm font-semibold transition ";
+        if selectedMode == kind {
+            return base + "border-blue-600 bg-blue-600 text-white shadow-soft";
+        }
+        return base + "border-border bg-white text-slate-900 hover:bg-slate-100";
+    }
+
     def scenarioButtonClass(kind: str) -> str {
         base = "rounded-full border px-4 py-2 text-sm font-semibold transition ";
         if selectedScenario == kind {
             return base + "border-primary bg-primary text-white shadow-soft";
         }
         return base + "border-border bg-white text-gray-800 hover:bg-card-hover";
+    }
+
+    def selectMode(kind: str) -> None { selectedMode = kind; }
+    def selectText() -> None { selectMode("text"); }
+    def selectMic() -> None { selectMode("mic"); }
+    def selectWritten() -> None { selectMode("written"); }
+    def selectEnglish() -> None { chooseLanguage("english"); }
+    def selectChinese() -> None { chooseLanguage("chinese"); }
+
+    def callAnalyzeSituation() -> None {
+        isLoading = True;
+        lastAssistantMessage = t("Analyzing your situation...");
+
+        inputText = chatInput;
+        if not inputText {
+            inputText = lastUserMessage;
+        }
+
+        fetch("/walker/AnalyzeSituation", {
+            "method": "POST",
+            "headers": {"Content-Type": "application/json"},
+            "body": JSON.stringify({"user_input": inputText})
+        }).then(lambda r: any -> any { return r.json(); })
+        .then(lambda data: any -> None {
+            if data and data.reports and data.reports.length > 0 {
+                lastAssistantMessage = "Analysis complete.";
+            }
+            isLoading = False;
+        }).catch(lambda e: any -> None {
+            lastAssistantMessage = "Unable to analyze right now.";
+            isLoading = False;
+        });
     }
 
     def enablePanic() -> None { panicMode = True; }
@@ -316,140 +357,68 @@ def:pub app() -> JsxElement {
     return (
         <div className="min-h-screen bg-[#f7efe2] text-slate-900">
             <section className="border-b border-black/5 bg-white/80 backdrop-blur">
-                <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 lg:px-10">
-                    <div>
-                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-700">{t("Session auto-erase available")}</p>
-                        <p className="mt-1 text-sm text-slate-600">{t("Use Auto Exit any time to close this session quickly. Keyboard shortcut: press Esc to exit the website fast.")}</p>
+                <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-4 lg:px-10 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button className={modeButtonClass("text")} onClick={selectText}>Text</button>
+                        <button className={modeButtonClass("mic")} onClick={selectMic}>Mic</button>
+                        <button className={modeButtonClass("written")} onClick={selectWritten}>Written</button>
                     </div>
-                    <div className="flex gap-3">
-                        <button className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100" onClick={closeSession}><span>{t("Confirm auto-erase")}</span></button>
-                        <button className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800" onClick={autoExitSite}><span>{t("Auto Exit")}</span></button>
+                    <div className="flex items-center gap-2">
+                        <button className={languageButtonClass("english", "")} onClick={selectEnglish}>English</button>
+                        <button className={languageButtonClass("chinese", "")} onClick={selectChinese}>中文</button>
                     </div>
                 </div>
             </section>
 
             <section className="mx-auto max-w-7xl px-6 py-10 lg:px-10">
-                <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
-                    <div className="rounded-[32px] border border-border bg-card p-8 shadow-card">
-                        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-red-700">{t("AI emergency legal aid assistant for immigrants")}</p>
-                        <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">{t("Fast, calm help for detention, raids, deportation orders, and family separation.")}</h1>
-                        <p className="mt-5 max-w-3xl text-base leading-7 text-slate-700">{t("This website gives urgent rights guidance in plain language, routes people to the right crisis tools, and helps families connect with legal support fast. It should not store personal information and it is not a law firm.")}</p>
-                        <div className="mt-8 flex flex-wrap gap-3">
-                            <a href="#assistant" className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">{t("Open crisis assistant")}</a>
-                            <button className="rounded-full border border-red-300 bg-red-50 px-5 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-100" onClick={enablePanic}><span>{t("Panic mode")}</span></button>
+                <div className="mx-auto grid max-w-3xl gap-8">
+                    <div className="rounded-[32px] border border-border bg-card p-6 shadow-card">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-700">{t("Session auto-erase available")}</p>
+                                <p className="mt-1 text-sm text-slate-600">{t("Use Auto Exit any time to close this session quickly. Keyboard shortcut: press Esc to exit the website fast.")}</p>
+                            </div>
+                            <div className="flex flex-wrap gap-3">
+                                <button className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100" onClick={closeSession}><span>{t("Confirm auto-erase")}</span></button>
+                                <button className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800" onClick={autoExitSite}><span>{t("Auto Exit")}</span></button>
+                            </div>
                         </div>
+                    </div>
+
+                    <div className="rounded-[48px] border border-border bg-white p-8 shadow-card text-center">
+                        <p className="mb-6 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">{t("Talk to the assistant now")}</p>
+                        <div className="mx-auto flex h-[320px] w-[320px] items-center justify-center rounded-full border-8 border-slate-200 bg-slate-50 shadow-inner">
+                            <button className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 px-6 text-xl font-semibold text-white shadow-xl transition hover:scale-[1.02]" onClick={callAnalyzeSituation}>
+                                {isLoading ? t("Analyzing...") : t("Analyze Situation")}
+                            </button>
+                        </div>
+                        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                            <div className="rounded-3xl border border-border bg-slate-50 p-4 text-left">
+                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Mode</p>
+                                <p className="mt-2 text-base font-semibold text-slate-900">{selectedMode}</p>
+                            </div>
+                            <div className="rounded-3xl border border-border bg-slate-50 p-4 text-left">
+                                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Language</p>
+                                <p className="mt-2 text-base font-semibold text-slate-900">{languageLabel(selectedLanguage)}</p>
+                            </div>
+                        </div>
+                        <textarea className="mt-6 h-32 w-full rounded-3xl border border-border bg-slate-100 px-4 py-4 text-sm text-slate-900 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-200" value={chatInput} onChange={updateChatInput} placeholder={t("Describe your situation here...")} />
+                        <div className="mt-4 flex flex-wrap justify-center gap-3">
+                            <button className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800" onClick={startVoiceInput}>{t("Voice input")}</button>
+                            <button className="rounded-full bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400" onClick={sendChat}>{t("Send")}</button>
+                        </div>
+                        <p className="mt-4 text-xs leading-5 text-slate-500">{voiceStatus}. {t("Current conversation language:")} {languageLabel(selectedLanguage)}.</p>
                     </div>
 
                     <div className="rounded-[32px] border border-border bg-card p-6 shadow-card">
-                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">{t("Critical first reminder")}</p>
-                        <div className="mt-4 space-y-3">
-                            <div className="rounded-2xl bg-red-50 p-4 text-sm font-semibold text-slate-900">{t("Do not sign anything without a lawyer.")}</div>
-                            <div className="rounded-2xl bg-blue-50 p-4 text-sm font-semibold text-slate-900">{t("You have the right to remain silent.")}</div>
-                            <div className="rounded-2xl bg-emerald-50 p-4 text-sm font-semibold text-slate-900">{t("You can ask to call a lawyer or trusted person.")}</div>
-                            <div className="rounded-2xl bg-amber-50 p-4 text-sm font-semibold text-slate-900">{t("If foreign-born, you can ask to contact your consulate.")}</div>
-                            <div className="rounded-2xl bg-white p-4 text-sm font-semibold text-slate-900 shadow-soft">{t("Many people still have the right to a hearing before an immigration judge.")}</div>
-                        </div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">{t("Quiet mode")}</p>
+                        <p className="mt-3 text-sm leading-6 text-slate-700">{t("This experience should not ask for or store sensitive personal details. Share only what is necessary with a licensed attorney or accredited representative.")}</p>
                     </div>
-                </div>
-            </section>
-
-            <section className="mx-auto max-w-7xl px-6 pb-4 lg:px-10">
-                <div className="rounded-[32px] border border-border bg-card p-6 shadow-card">
-                    <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-                        <div>
-                            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">{t("Language")}</p>
-                            <input className="mt-2 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200" value={languageSearch} onChange={searchLanguage} placeholder={t("Search language")} />
-                            <div className="mt-3 max-h-72 overflow-y-auto pr-1">
-                                {languageMatches("english", languageSearch) and <button className={languageButtonClass("english", "")} onClick={lambda -> None { chooseLanguage("english"); }}><span>English</span></button>}
-                                {languageMatches("spanish", languageSearch) and <button className={languageButtonClass("spanish", "mt-1")} onClick={lambda -> None { chooseLanguage("spanish"); }}><span>Español</span></button>}
-                                {languageMatches("chinese", languageSearch) and <button className={languageButtonClass("chinese", "mt-1")} onClick={lambda -> None { chooseLanguage("chinese"); }}><span>中文</span></button>}
-                                {languageMatches("russian", languageSearch) and <button className={languageButtonClass("russian", "mt-1")} onClick={lambda -> None { chooseLanguage("russian"); }}><span>Русский</span></button>}
-                                {languageMatches("french", languageSearch) and <button className={languageButtonClass("french", "mt-1")} onClick={lambda -> None { chooseLanguage("french"); }}><span>Français</span></button>}
-                                {languageMatches("arabic", languageSearch) and <button className={languageButtonClass("arabic", "mt-1")} onClick={lambda -> None { chooseLanguage("arabic"); }}><span>العربية</span></button>}
-                            </div>
-                            <p className="mt-2 text-xs leading-5 text-slate-600">{t("Current:")} {languageLabel(selectedLanguage)}</p>
-                        </div>
-
-                        <div>
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                                <div>
-                                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-700">{t("Emergency response guide")}</p>
-                                    <h2 className="mt-2 text-3xl font-bold text-gray-900">{scenarioTitle(selectedScenario)}</h2>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                                    <button className={scenarioButtonClass("ice")} onClick={chooseIce}><span>{t("ICE now")}</span></button>
-                                    <button className={scenarioButtonClass("detention")} onClick={chooseDetention}><span>{t("Detention")}</span></button>
-                                    <button className={scenarioButtonClass("order")} onClick={chooseOrder}><span>{t("Order")}</span></button>
-                                    <button className={scenarioButtonClass("family")} onClick={chooseFamily}><span>{t("Missing family")}</span></button>
-                                </div>
-                            </div>
-
-                            <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
-                                <p className="text-sm font-semibold uppercase tracking-[0.2em]">{t("Most important first action")}</p>
-                                <p className="mt-2 text-lg font-bold">{translatedUrgentLine(selectedLanguage)}</p>
-                            </div>
-
-                            <ol className="mt-6 space-y-4">
-                                <li className="flex gap-4 rounded-2xl border border-border bg-orange-50/50 p-4"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-700 text-sm font-bold text-white">1</div><p className="text-sm leading-6 text-gray-800">{step1(selectedScenario)}</p></li>
-                                <li className="flex gap-4 rounded-2xl border border-border bg-orange-50/50 p-4"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-700 text-sm font-bold text-white">2</div><p className="text-sm leading-6 text-gray-800">{step2(selectedScenario)}</p></li>
-                                <li className="flex gap-4 rounded-2xl border border-border bg-orange-50/50 p-4"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-700 text-sm font-bold text-white">3</div><p className="text-sm leading-6 text-gray-800">{step3(selectedScenario)}</p></li>
-                                <li className="flex gap-4 rounded-2xl border border-border bg-orange-50/50 p-4"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-700 text-sm font-bold text-white">4</div><p className="text-sm leading-6 text-gray-800">{step4(selectedScenario)}</p></li>
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="assistant" className="mx-auto max-w-7xl px-6 py-10 lg:px-10">
-                <div className="rounded-3xl border border-border bg-card p-6 shadow-card sm:p-8">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                            <h3 className="mt-2 text-2xl font-bold">{t("Talk to the assistant now")}</h3>
-                            <p className="mt-2 text-sm leading-6 text-slate-300">{t("Describe the emergency in your own words. The chatbot triages the situation and points to the right next steps immediately.")}</p>
-                        </div>
-                        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                            <p className="font-semibold text-white">{t("Voice input mode")}</p>
-                            <p className="mt-1 text-xs leading-5 text-slate-300">{t("Tap the microphone to speak instead of typing.")}</p>
-                        </div>
-                    </div>
-                    <div className="mt-5 space-y-3 rounded-2xl border border-white/10 bg-black/20 p-4">
-                        <div className="ml-auto max-w-[90%] rounded-2xl bg-cyan-500 px-4 py-3 text-sm leading-6 text-slate-950 shadow-soft">
-                            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">{t("user")}</p>
-                            <p>{lastUserMessage}</p>
-                        </div>
-                        <div className="max-w-[90%] rounded-2xl bg-white/10 px-4 py-3 text-sm leading-6 text-white shadow-soft">
-                            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70">{t("assistant")}</p>
-                            {isLoading and <p>{t("Analyzing your situation...")}</p>}
-                            {not isLoading and <p>{lastAssistantMessage}</p>}
-                        </div>
-                    </div>
-                    <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
-                        <input className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30" value={chatInput} onChange={updateChatInput} placeholder={t("Type what is happening right now")} />
-                        <button className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400" onClick={startVoiceInput}><span>{t("Voice input")}</span></button>
-                        <button className="rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300" onClick={sendChat}><span>{t("Send")}</span></button>
-                    </div>
-                    <p className="mt-3 text-xs leading-5 text-slate-300">{voiceStatus}. {t("Current conversation language:")} {languageLabel(selectedLanguage)}.</p>
                 </div>
             </section>
 
             <section className="mx-auto max-w-7xl px-6 pb-12 lg:px-10">
-                <div className="mt-6 grid gap-6 md:grid-cols-3">
-                    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft"><h3 className="text-xl font-bold text-gray-900">{t("If someone is physically unsafe")}</h3><p className="mt-3 text-sm leading-6 text-gray-700">{t("Move to immediate physical safety first. Call 911 if there is a medical emergency or immediate danger. Legal strategy comes after safety.")}</p></div>
-                    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft"><h3 className="text-xl font-bold text-gray-900">{t("Privacy-first support")}</h3><p className="mt-3 text-sm leading-6 text-gray-700">{t("This experience should not ask for or store sensitive personal details. Share only what is necessary with a licensed attorney or accredited representative.")}</p></div>
-                    <div className="rounded-3xl border border-border bg-card p-6 shadow-soft"><h3 className="text-xl font-bold text-gray-900">{t("Multilingual and plain language")}</h3><p className="mt-3 text-sm leading-6 text-gray-700">{t("The assistant should answer in the user's language, use short sentences, and explain legal terms simply. Specific case strategy must go to a lawyer.")}</p></div>
-                </div>
-
-                <div className="mt-6 rounded-3xl border border-border bg-gray-900 p-6 text-white shadow-card">
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-300">{t("Emergency legal contacts")}</p>
-                    <div className="mt-4 grid gap-4 text-sm leading-6 text-gray-200 sm:grid-cols-2">
-                        <div><p className="font-bold text-white">RAICES</p><p>raicestexas.org</p></div>
-                        <div><p className="font-bold text-white">ACLU Immigrants' Rights</p><p>aclu.org/issues/immigrants-rights</p></div>
-                        <div><p className="font-bold text-white">National Immigration Legal Services Directory</p><p>immigrationadvocates.org/nonprofit/legaldirectory</p></div>
-                        <div><p className="font-bold text-white">{t("CLINIC legal help directory")}</p><p>cliniclegal.org/find-legal-help</p></div>
-                    </div>
-                </div>
-
-                {sessionClosed and <div className="mt-6 rounded-3xl border border-green-200 bg-green-50 p-6 shadow-soft"><p className="text-sm font-semibold uppercase tracking-[0.2em] text-green-700">{t("Session auto-erase confirmed")}</p><p className="mt-2 text-sm leading-6 text-gray-700">{t("This session is marked for quick exit and no personal details should be retained.")}</p><button className="mt-4 rounded-full border border-green-300 bg-white px-5 py-3 text-sm font-semibold text-green-800 transition hover:bg-green-100" onClick={reopenSession}><span>{t("Continue session")}</span></button></div>}
+                {sessionClosed and <div className="rounded-3xl border border-green-200 bg-green-50 p-6 shadow-soft"><p className="text-sm font-semibold uppercase tracking-[0.2em] text-green-700">{t("Session auto-erase confirmed")}</p><p className="mt-2 text-sm leading-6 text-gray-700">{t("This session is marked for quick exit and no personal details should be retained.")}</p><button className="mt-4 rounded-full border border-green-300 bg-white px-5 py-3 text-sm font-semibold text-green-800 transition hover:bg-green-100" onClick={reopenSession}><span>{t("Continue session")}</span></button></div>}
             </section>
         </div>
     );
