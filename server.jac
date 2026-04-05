@@ -24,127 +24,124 @@ enum ImmigrationAspect {
 # Nodes
 # ---------------------------------------------------------------------------
 
-# node LegalNode {
-#     has aspect: ImmigrationAspect;
-#     has label: str = "";
-#     has value: str = "";
-#     has is_ready: bool = False;
-#     has history: list = [];
-#     has model: str = "qwen2.5";
-#     has loop_count: int = 0;
-#     has dataset: str = "";
-#     has is_done: bool = False;
-#     has final_summary: str = "";
-
-#     def load_context() -> str {
-#         import os;
-#         docs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs");
-#         doc_path = os.path.join(docs_dir, self.label + ".md");
-#         if os.path.exists(doc_path) {
-#             with open(doc_path, "r") as f {
-#                 return f.read();
-#             }
-#         }
-#         return "";
-#     }
-
-#     # def get_advice_py(user_situation: str, context: str) -> str {
-#     #     import requests
-#     #     import json
-
-#     #     url = "http://localhost:11434/api/generate";
-        
-#     #     # --- CUSTOM TASK LOGIC ---
-#     #     # This ensures 'follow_up_questions' actually generates questions
-#     #     task_instruction = f"Provide legal guidance for the {self.label} section.";
-        
-#     #     if self.label == "follow_up_questions" {
-#     #         task_instruction = "Do not provide a summary. Instead, generate a list of 3-5 critical follow-up questions the user should ask an immigration attorney based on their situation.";
-#     #     }
-        
-#     #     full_prompt = f"Context from USCIS: {context}\n\nUser Situation: {user_situation}\n\nTask: {task_instruction}";
-
-#     #     payload = {
-#     #         "model": self.model,
-#     #         "prompt": full_prompt,
-#     #         "stream": False
-#     #     };
-
-#     #     try {
-#     #         response = requests.post(url, json=payload, timeout=45);
-#     #         if response.status_code == 200 {
-#     #             return response.json().get("response", "No response from model.");
-#     #         } else {
-#     #             return f"Error: Server returned status {response.status_code}";
-#     #         }
-#     #     } except Exception as e {
-#     #         # This keeps the app from crashing and tells the user exactly what's wrong
-#     #         return f"Ollama Connection Error. Ensure 'ollama serve' is running and you have downloaded {self.model}.";
-#     #     }
-#     # }
-
-#     def get_advice_py(user_situation: str, context: str) -> str {
-#         # Temporarily bypass the network call to test the UI
-#         return f"MOCK DATA: Analysis for {self.label}. This proves the frontend-to-backend bridge is working!";
-#     }
-
-#     def retrieve_value(prompt: str) -> str {
-#         context = self.load_context();
-#         # Calls the Python method which now handles the 'follow_up' logic internally
-#         new_val = self.get_advice_py(user_situation=prompt, context=context);
-#         return new_val;
-#     }
-
-#     def generate_summary() -> str {
-#         self.final_summary = (
-#             "Immigration Case Summary for " + self.label + ":\n\n"
-#             + "Advice: Based on INA and USCIS policy, document your status and maintain all official correspondence.\n\n"
-#             + "Key Resources:\n"
-#             + "- USCIS main portal: uscis.gov\n"
-#             + "- ICE detainee locator: locator.ice.gov\n"
-#             + "- AILA attorney finder: aila.org/find-a-lawyer\n\n"
-#             + "Critical: Do not miss any Notice to Appear (NTA) deadlines."
-#         );
-#         return self.final_summary;
-#     }
-
-#     def update_value(new_value: str) -> None {
-#         self.history.append({
-#             "previous": self.value,
-#             "timestamp": "now"
-#         });
-#         self.value = new_value;
-#         self.is_ready = True;
-#         self.loop_count += 1;
-#     }
-
-#     def switch_model(new_model: str) -> None {
-#         # Updated allowed list to include your local qwen
-#         allowed = ["qwen2.5", "llama3", "ollama", "gpt-4o", "gemini-1.5-pro"];
-#         if new_model in allowed {
-#             self.model = new_model;
-#         }
-#     }
-
-#     def reset() -> None {
-#         self.history = [];
-#         self.value = "";
-#         self.is_ready = False;
-#         self.loop_count = 0;
-#         self.is_done = False;
-#         self.final_summary = "";
-#     }
-# }
-
-# mock legalNode
 node LegalNode {
+    has aspect: ImmigrationAspect;
     has label: str = "";
     has value: str = "";
-    has model: str = "mock";
+    has is_ready: bool = False;
+    has history: list = [];
+    has model: str = "qwen2.5";
+    has loop_count: int = 0;
+    has dataset: str = "";
+    has is_done: bool = False;
+    has final_summary: str = "";
 
-    # Bypassing EVERYTHING to test the pipe
+    def load_context() -> str {
+        import os;
+        docs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs");
+        doc_path = os.path.join(docs_dir, self.label + ".md");
+        if os.path.exists(doc_path) {
+            with open(doc_path, "r") as f {
+                return f.read();
+            }
+        }
+        return "";
+    }
+
+    # def get_advice_py(user_situation: str, context: str) -> str {
+    #     import requests
+    #     import json
+
+    #     url = "http://localhost:11434/api/generate";
+        
+    #     # --- CUSTOM TASK LOGIC ---
+    #     # This ensures 'follow_up_questions' actually generates questions
+    #     task_instruction = f"Provide legal guidance for the {self.label} section.";
+        
+    #     if self.label == "follow_up_questions" {
+    #         task_instruction = "Do not provide a summary. Instead, generate a list of 3-5 critical follow-up questions the user should ask an immigration attorney based on their situation.";
+    #     }
+        
+    #     full_prompt = f"Context from USCIS: {context}\n\nUser Situation: {user_situation}\n\nTask: {task_instruction}";
+
+    #     payload = {
+    #         "model": self.model,
+    #         "prompt": full_prompt,
+    #         "stream": False
+    #     };
+
+    #     try {
+    #         response = requests.post(url, json=payload, timeout=45);
+    #         if response.status_code == 200 {
+    #             return response.json().get("response", "No response from model.");
+    #         } else {
+    #             return f"Error: Server returned status {response.status_code}";
+    #         }
+    #     } except Exception as e {
+    #         # This keeps the app from crashing and tells the user exactly what's wrong
+    #         return f"Ollama Connection Error. Ensure 'ollama serve' is running and you have downloaded {self.model}.";
+    #     }
+    # }
+
+    def get_advice_py(user_situation: str, context: str) -> str {
+        # Temporarily bypass the network call to test the UI
+        return f"MOCK DATA: Analysis for {self.label}. This proves the frontend-to-backend bridge is working!";
+    }
+
+    def get_follow_up_questions(user_situation: str, context: str) -> list {
+        # Temporarily mocked — replace with LLM call when get_advice_py is re-enabled
+        return [
+            "Has USCIS sent you any Requests for Evidence (RFE)?",
+            "Do you have an attorney representing you in this case?",
+            "Have you received a Notice to Appear (NTA) from immigration court?"
+        ];
+    }
+
     def retrieve_value(prompt: str) -> str {
-        return "The system is working! This is mock data for " + self.label;
+        context = self.load_context();
+        # Calls the Python method which now handles the 'follow_up' logic internally
+        new_val = self.get_advice_py(user_situation=prompt, context=context);
+        return new_val;
+    }
+
+    def generate_summary() -> str {
+        self.final_summary = (
+            "Immigration Case Summary for " + self.label + ":\n\n"
+            + "Advice: Based on INA and USCIS policy, document your status and maintain all official correspondence.\n\n"
+            + "Key Resources:\n"
+            + "- USCIS main portal: uscis.gov\n"
+            + "- ICE detainee locator: locator.ice.gov\n"
+            + "- AILA attorney finder: aila.org/find-a-lawyer\n\n"
+            + "Critical: Do not miss any Notice to Appear (NTA) deadlines."
+        );
+        return self.final_summary;
+    }
+
+    def update_value(new_value: str) -> None {
+        self.history.append({
+            "previous": self.value,
+            "timestamp": "now"
+        });
+        self.value = new_value;
+        self.is_ready = True;
+        self.loop_count += 1;
+    }
+
+    def switch_model(new_model: str) -> None {
+        # Updated allowed list to include your local qwen
+        allowed = ["qwen2.5", "llama3", "ollama", "gpt-4o", "gemini-1.5-pro", "claude-sonnet-4-6"];
+        if new_model in allowed {
+            self.model = new_model;
+        }
+    }
+
+    def reset() -> None {
+        self.history = [];
+        self.value = "";
+        self.is_ready = False;
+        self.loop_count = 0;
+        self.is_done = False;
+        self.final_summary = "";
     }
 }
 
@@ -178,7 +175,7 @@ walker:pub SwitchModel {
     has target_label: str = "";
     has new_model: str = "";
 
-    can visit_root with `root entry {
+    can visit_root with Root entry {
         visit [-->];
     }
 
@@ -210,7 +207,7 @@ walker:pub AnalyzeSituation {
         here.update_value(new_val);
 
         self.results[here.label] = {
-            "value": here.retrieve_value(self.user_input),
+            "value": here.value,
             "model": here.model,
             "is_ready": here.is_ready,
             "loop_count": here.loop_count
@@ -243,7 +240,7 @@ walker:pub FollowUp {
         );
 
         for n in [-->] {
-            if n is LegalNode {
+            if isinstance(n, LegalNode) {
                 self.node_outputs[n.label] = n.value;
             }
         }
@@ -331,7 +328,7 @@ walker Summarize {
         );
 
         for n in [-->] {
-            if n is SummaryNode {
+            if isinstance(n, SummaryNode) {
                 n.value = self.summary;
                 n.is_ready = True;
                 n.generated_at_loop = 3;
@@ -363,7 +360,7 @@ walker GetHistory {
                 "current_value": here.value,
                 "model": here.model,
                 "loop_count": here.loop_count,
-                "history": here.get_history()
+                "history": here.history
             });
         }
         visit [-->];

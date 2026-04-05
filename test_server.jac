@@ -8,7 +8,7 @@ walker TestAnalyzeSituation {
     has test_input: str = "I received a Notice to Appear and my green card application is pending.";
     has passed: bool = False;
 
-    can run with `root entry {
+    can run with Root entry {
         analyzer = root spawn AnalyzeSituation(user_input=self.test_input);
 
         results = analyzer.results;
@@ -42,14 +42,14 @@ walker TestAnalyzeSituation {
 walker TestSwitchModel {
     has passed: bool = False;
 
-    can run with `root entry {
+    can run with Root entry {
         root spawn SwitchModel(
             target_label="case_assessment",
             new_model="claude-sonnet-4-6"
         );
 
         for n in [root -->] {
-            if n is LegalNode and n.label == "case_assessment" {
+            if isinstance(n, LegalNode) and n.label == "case_assessment" {
                 self.passed = (n.model == "claude-sonnet-4-6");
             }
         }
@@ -68,14 +68,14 @@ walker TestSwitchModel {
 walker TestSwitchModelInvalid {
     has passed: bool = False;
 
-    can run with `root entry {
+    can run with Root entry {
         root spawn SwitchModel(
             target_label="rights_protections",
             new_model="fake-model-xyz"
         );
 
         for n in [root -->] {
-            if n is LegalNode and n.label == "rights_protections" {
+            if isinstance(n, LegalNode) and n.label == "rights_protections" {
                 self.passed = (n.model != "fake-model-xyz");
             }
         }
@@ -94,7 +94,7 @@ walker TestSwitchModelInvalid {
 walker TestResetAll {
     has passed: bool = False;
 
-    can run with `root entry {
+    can run with Root entry {
         # First populate nodes
         root spawn AnalyzeSituation(user_input="Test input for reset.");
 
@@ -104,7 +104,7 @@ walker TestResetAll {
         # Check all nodes are cleared
         all_reset = True;
         for n in [root -->] {
-            if n is LegalNode {
+            if isinstance(n, LegalNode) {
                 if n.value != "" or n.loop_count != 0 or n.is_ready != False {
                     all_reset = False;
                 }
@@ -126,7 +126,7 @@ walker TestResetAll {
 walker TestFollowUp {
     has passed: bool = False;
 
-    can run with `root entry {
+    can run with Root entry {
         # First analyze
         root spawn AnalyzeSituation(user_input="My H-1B visa expires next month.");
 
@@ -154,7 +154,7 @@ walker TestFollowUp {
 walker TestMaxLoops {
     has passed: bool = False;
 
-    can run with `root entry {
+    can run with Root entry {
         root spawn AnalyzeSituation(user_input="I am applying for a green card through my spouse.");
 
         i = 0;
@@ -186,7 +186,7 @@ walker TestMaxLoops {
 walker TestIngestDocument {
     has passed: bool = False;
 
-    can run with `root entry {
+    can run with Root entry {
         root spawn IngestDocument(
             content="Green card applicants must file Form I-485 to adjust status. Asylum seekers must file Form I-589 within one year of arrival in the United States.",
             source="USCIS Policy Manual",
@@ -195,7 +195,7 @@ walker TestIngestDocument {
 
         chunk_count = 0;
         for n in [root -->] {
-            if n is DocumentChunk {
+            if isinstance(n, DocumentChunk) {
                 chunk_count += 1;
             }
         }
