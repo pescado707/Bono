@@ -135,8 +135,8 @@ walker AnalyzeSituation {
     has user_input: str = "";
     has results: dict = {};
     has retrieved_context: str = "";
-    has relevant_aspects: list = [];
 
+<<<<<<< HEAD
     can start with `root entry {
         ui = self.user_input.lower();
 
@@ -200,10 +200,42 @@ walker AnalyzeSituation {
             "model": here.model,
             "loop_count": here.loop_count,
             "sources": []
-        };
+=======
+    can visit_root with root entry {
+        aspect_labels = [
+            "situation_summary", "your_rights", "to_do", "not_to_do", 
+            "questions", "legal_jargon", "who_can_help", "what_happens_next"
+        ];
+        
+        for label in aspect_labels {
+            self.results[label] = {"value": "Processing...", "status": "pending"};
+        }
+
+        # Super RAG time
+        relevant_chunks = vectorstore.search(query=self.user_input, top_k=5);
+        self.retrieved_context = "";
+        for chunk in relevant_chunks {
+            self.retrieved_context += chunk.content + "\n\n";
+        }
+
         visit [-->];
     }
 
+    can visit_node with LegalNode entry {
+        node_prompt = self.get_node_specific_prompt(here.label);
+        here.update_value(node_prompt); 
+        
+        self.results[here.label] = {
+            "value": here.value,
+            "model": here.model,
+            "is_ready": here.is_ready
+>>>>>>> 47e10f8 (hardcoding is no more more)
+        };
+        
+        visit [-->];
+    }
+
+<<<<<<< HEAD
     can build_prompt(role: str) -> str {
         ui = self.user_input;
         if role == "situation_summary" {
@@ -225,6 +257,24 @@ walker AnalyzeSituation {
         } else {
             return ui;
         }
+=======
+    can get_node_specific_prompt(label: str) -> str {
+        prompts = {
+            "situation_summary": "Summarize the legal urgency of this input.",
+            "your_rights": "What constitutional rights apply here?",
+            "to_do": "What is the immediate first step?",
+            "not_to_do": "What actions should be avoided to prevent self-incrimination?",
+            "questions": "I need more info to give better advice. Based on the user's input, what is the SINGLE most important follow-up question I should ask them to better understand their legal risk?",
+            "legal_jargon": "Define any complex terms found in this scenario.",
+            "who_can_help": "List types of organizations or legal aid needed.",
+            "what_happens_next": "What is the typical timeline for this legal process?"
+        };
+        return f"{prompts.get(label, '')} User Input: {self.user_input} Context: {self.retrieved_context}";
+    }
+
+    can report_results with root exit {
+        report self.results;
+>>>>>>> 47e10f8 (hardcoding is no more more)
     }
 }
 
