@@ -198,6 +198,25 @@ walker:pub AnalyzeSituation {
     has results: dict = {};
 
     can visit_root with Root entry {
+        # Auto-initialize graph if user's root has no LegalNodes yet
+        has_nodes = False;
+        for n in [root -->] {
+            if isinstance(n, LegalNode) {
+                has_nodes = True;
+                break;
+            }
+        }
+        if not has_nodes {
+            root ++> LegalNode(label="case_assessment", aspect=ImmigrationAspect.CASE_ASSESSMENT);
+            root ++> LegalNode(label="rights_protections", aspect=ImmigrationAspect.RIGHTS_PROTECTIONS);
+            root ++> LegalNode(label="urgent_steps", aspect=ImmigrationAspect.URGENT_STEPS);
+            root ++> LegalNode(label="critical_warnings", aspect=ImmigrationAspect.CRITICAL_WARNINGS);
+            root ++> LegalNode(label="follow_up_questions", aspect=ImmigrationAspect.FOLLOW_UP_QUESTIONS);
+            root ++> LegalNode(label="legal_glossary", aspect=ImmigrationAspect.LEGAL_GLOSSARY);
+            root ++> LegalNode(label="help_contacts", aspect=ImmigrationAspect.HELP_CONTACTS);
+            root ++> LegalNode(label="process_outlook", aspect=ImmigrationAspect.PROCESS_OUTLOOK);
+            root ++> SummaryNode();
+        }
         visit [-->];
     }
 
