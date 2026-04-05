@@ -162,7 +162,7 @@ walker:pub AnalyzeSituation {
     has user_input: str = "";
     has results: dict = {};
 
-    can visit_root with `root entry {
+    can visit_root with Root entry {
         visit [-->];
     }
 
@@ -181,7 +181,7 @@ walker:pub AnalyzeSituation {
         visit [-->];
     }
 
-    can report_results with `root exit {
+    can report_results with Root exit {
         report self.results;
     }
 }
@@ -197,7 +197,7 @@ walker:pub FollowUp {
     has limit_reached: bool = False;
     has node_outputs: dict = {};
 
-    can start with `root entry {
+    can start with Root entry {
         self.accumulated_context = (
             self.original_input
             + " Additional context from follow-up: "
@@ -250,7 +250,7 @@ walker:pub FollowUp {
         visit [-->];
     }
 
-    can finish with `root exit {
+    can finish with Root exit {
         if self.limit_reached {
             summarizer = Summarize(
                 node_outputs=self.node_outputs,
@@ -273,7 +273,7 @@ walker Summarize {
     has accumulated_context: str = "";
     has summary: str = "";
 
-    can build_summary with `root entry {
+    can build_summary with Root entry {
         assessment  = str(self.node_outputs.get("case_assessment", ""));
         rights      = str(self.node_outputs.get("rights_protections", ""));
         urgent      = str(self.node_outputs.get("urgent_steps", ""));
@@ -314,7 +314,7 @@ walker GetHistory {
     has target_label: str = "all";
     has results: list = [];
 
-    can start with `root entry {
+    can start with Root entry {
         visit [-->];
     }
 
@@ -337,7 +337,7 @@ walker GetHistory {
 walker:pub ResetAll {
     has results: list = [];
 
-    can start with `root entry {
+    can start with Root entry {
         visit [-->];
     }
 
@@ -347,7 +347,7 @@ walker:pub ResetAll {
         visit [-->];
     }
 
-    can finish with `root exit {
+    can finish with Root exit {
         report self.results;
     }
 }
@@ -359,7 +359,7 @@ walker IngestDocument {
     has source: str = "";
     has topic: str = "";
 
-    can ingest with `root entry {
+    can ingest with Root entry {
         chunks = self.chunk_text(self.content);
         for chunk in chunks {
             doc = DocumentChunk(
