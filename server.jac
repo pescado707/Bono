@@ -30,7 +30,7 @@ node LegalNode {
     has value: str = "";
     has is_ready: bool = False;
     has history: list = [];
-    has model: str = "ollama";
+    has model: str = "qwen2.5";
     has loop_count: int = 0;
     has dataset: str = "";
     has is_done: bool = False;
@@ -47,12 +47,39 @@ node LegalNode {
         return "";
     }
 
-    def get_advice(user_situation: str, context: str) -> str by llm();
-    def get_follow_up_questions(user_situation: str, context: str) -> list[str] by llm();
+    def get_advice_py(user_situation: str, context: str) -> str {
+        import requests
+        import json
+
+        url = "http://localhost:11434/api/generate";
+        
+        # Construct the prompt
+        full_prompt = f"Context: {context}\n\nUser Situation: {user_situation}\n\nProvide legal guidance for the {self.label} section.";
+
+        payload = {
+            "model": self.model,
+            "prompt": full_prompt,
+            "stream": False
+        };
+
+        try {
+            response = requests.post(url, json=payload, timeout=30);
+            if response.status_code == 200 {
+                return response.json().get("response", "No response from model.");
+            } else {
+                return f"Error: Server returned status {response.status_code}";
+            }
+        } except Exception as e {
+            return f"Connection Error: {str(e)}. Is Ollama running?";
+        }
+    }
+    # def get_follow_up_questions(user_situation: str, context: str) -> list[str] by llm();
 
     def retrieve_value(prompt: str) -> str {
         context = self.load_context();
-        return self.get_advice(user_situation=prompt, context=context);
+        # Call the new Python-based method
+        new_val = self.get_advice_py(user_situation=prompt, context=context);
+        return new_val;
     }
 
     def generate_summary() -> str {
