@@ -3,19 +3,21 @@ Legal AI Agentic System - Jac-compatible rewrite.
 Uses walker/node/enum graph primitives with correct Jac syntax.
 """
 
+import os;
+
 # ---------------------------------------------------------------------------
 # Enum
 # ---------------------------------------------------------------------------
 
-enum LegalAspect {
-    SITUATION_SUMMARY,
-    YOUR_RIGHTS,
-    TO_DO,
-    NOT_TO_DO,
-    QUESTIONS,
-    LEGAL_JARGON,
-    WHO_CAN_HELP,
-    WHAT_HAPPENS_NEXT
+enum ImmigrationAspect {
+    CASE_ASSESSMENT,
+    RIGHTS_PROTECTIONS,
+    URGENT_STEPS,
+    CRITICAL_WARNINGS,
+    FOLLOW_UP_QUESTIONS,
+    LEGAL_GLOSSARY,
+    HELP_CONTACTS,
+    PROCESS_OUTLOOK
 }
 
 # ---------------------------------------------------------------------------
@@ -23,30 +25,48 @@ enum LegalAspect {
 # ---------------------------------------------------------------------------
 
 node LegalNode {
-    has aspect: LegalAspect;
+    has aspect: ImmigrationAspect;
     has label: str = "";
     has value: str = "";
     has is_ready: bool = False;
     has history: list = [];
-    has model: str = "claude-haiku-4-5-20251001";
+    has model: str = "ollama";
     has loop_count: int = 0;
     has dataset: str = "";
     has is_done: bool = False;
     has final_summary: str = "";
 
+    def load_context() -> str {
+        docs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs");
+        doc_path = os.path.join(docs_dir, self.label + ".md");
+        if os.path.exists(doc_path) {
+            with open(doc_path, "r") as f {
+                return f.read();
+            }
+        }
+        return "";
+    }
+
+    def get_advice(user_situation: str, context: str) -> str by llm();
+    def get_follow_up_questions(user_situation: str, context: str) -> list[str] by llm();
+
     def retrieve_value(prompt: str) -> str {
-        return "Mock legal document content relevant to: " + prompt;
+        context = self.load_context();
+        return self.get_advice(user_situation=prompt, context=context);
     }
 
     def generate_summary() -> str {
         self.final_summary = (
-            "Final Summary for " + self.label + ":\n\n"
-            + "Advice: Based on USCIS guidelines (Section 214 of INA), ensure all documents are submitted.\n\n"
-            + "Key Links:\n"
-            + "- USCIS H-1B page: uscis.gov/working-in-the-united-states/h-1b\n"
-            + "- Cite: INA Section 101(a)(15)(H)(i)\n\n"
-            + "Loopholes to check: Verify specialty occupation requirements to avoid denials.\n\n"
-            + "Do your own research with these sources."
+            "Immigration Case Summary for " + self.label + ":\n\n"
+            + "Advice: Based on INA and USCIS policy, document your status and maintain all official correspondence.\n\n"
+            + "Key Resources:\n"
+            + "- USCIS main portal: uscis.gov\n"
+            + "- ICE detainee locator: locator.ice.gov\n"
+            + "- Asylum info: uscis.gov/humanitarian/refugees-asylum\n"
+            + "- AILA attorney finder: aila.org/find-a-lawyer\n"
+            + "- Cite: INA Sections 208 (asylum), 240 (removal proceedings), 245 (adjustment of status)\n\n"
+            + "Critical: Do not miss any Notice to Appear (NTA) deadlines or immigration court dates.\n\n"
+            + "Do your own research and consult an immigration attorney."
         );
         return self.final_summary;
     }
@@ -63,6 +83,7 @@ node LegalNode {
 
     def switch_model(new_model: str) -> None {
         allowed = [
+            "ollama",
             "claude-haiku-4-5-20251001",
             "claude-sonnet-4-6",
             "claude-opus-4-6",
@@ -88,6 +109,16 @@ node LegalNode {
         self.final_summary = "";
     }
 }
+
+sem LegalNode.get_advice = """You are an immigration legal assistant. Using ONLY the content in the 'context' parameter (a government/legal reference document), provide specific and actionable advice for the user's situation. Cite relevant form numbers, INA statutes, or deadlines from the document. Do not invent information not present in the context.""";
+
+sem LegalNode.get_advice.user_situation = "The user's immigration situation as they described it.";
+sem LegalNode.get_advice.context = "A government or legal reference document covering this specific aspect of US immigration law. Ground your answer strictly in this document.";
+
+sem LegalNode.get_follow_up_questions = """You are an immigration legal assistant. Review the 'Follow-up Questions' section of the context document. Return a list of 2-3 targeted questions from that section that are most relevant to the user's situation and would help clarify the case. If the situation is already fully described and no critical information is missing, return an empty list.""";
+
+sem LegalNode.get_follow_up_questions.user_situation = "The user's immigration situation as described so far.";
+sem LegalNode.get_follow_up_questions.context = "A government or legal reference document whose 'Follow-up Questions' section contains question templates for this aspect of immigration law.";
 
 node SummaryNode {
     has value: str = "";
@@ -130,23 +161,15 @@ walker SwitchModel {
 walker AnalyzeSituation {
     has user_input: str = "";
     has results: dict = {};
-    has retrieved_context: str = "";
 
     can visit_root with `root entry {
-        # Mock RAG context — replace with vectorstore.search when plugin is ready
-        self.retrieved_context = (
-            "You have the right to remain silent. "
-            + "Do not sign anything without a lawyer. "
-            + "You can ask to contact your consulate if foreign-born."
-        );
-
         visit [-->];
     }
 
     can visit_node with LegalNode entry {
         here.reset();
-        node_prompt = self.get_node_specific_prompt(here.label);
-        here.update_value(node_prompt);
+        new_val = here.retrieve_value(self.user_input);
+        here.update_value(new_val);
 
         self.results[here.label] = {
             "value": here.value,
@@ -160,21 +183,6 @@ walker AnalyzeSituation {
 
     can report_results with `root exit {
         report self.results;
-    }
-
-    def get_node_specific_prompt(label: str) -> str {
-        prompts = {
-            "situation_summary": "Summarize the legal urgency of this input.",
-            "your_rights": "What constitutional rights apply here?",
-            "to_do": "What is the immediate first step?",
-            "not_to_do": "What actions should be avoided to prevent self-incrimination?",
-            "questions": "What is the single most important follow-up question to better understand the legal risk?",
-            "legal_jargon": "Define any complex legal terms found in this scenario.",
-            "who_can_help": "List types of organizations or legal aid needed.",
-            "what_happens_next": "What is the typical timeline for this legal process?"
-        };
-        base = prompts.get(label, "");
-        return base + " User Input: " + self.user_input + " Context: " + self.retrieved_context;
     }
 }
 
@@ -213,15 +221,21 @@ walker FollowUp {
             return;
         }
 
-        prompt = self.build_prompt(here.label);
-        here.update_value(prompt);
-
-        if here.label == "questions" {
-            val_lower = here.value.lower();
-            if "no more" in val_lower or "sufficient" in val_lower {
+        if here.label == "follow_up_questions" {
+            questions = here.get_follow_up_questions(
+                user_situation=self.accumulated_context,
+                context=here.load_context()
+            );
+            if len(questions) == 0 {
                 here.is_done = True;
                 here.generate_summary();
+                here.update_value("No further questions needed.");
+            } else {
+                here.update_value("\n".join(questions));
             }
+        } else {
+            new_val = here.retrieve_value(self.accumulated_context);
+            here.update_value(new_val);
         }
 
         self.results[here.label] = {
@@ -250,29 +264,6 @@ walker FollowUp {
             };
         }
     }
-
-    def build_prompt(role: str) -> str {
-        ctx = self.accumulated_context;
-        if role == "situation_summary" {
-            return "Summarize this legal situation in 2 plain sentences, incorporating the latest context: " + ctx;
-        } elif role == "your_rights" {
-            return "List the 2-3 most critical legal rights that apply, incorporating the latest context: " + ctx;
-        } elif role == "to_do" {
-            return "Most important action in the next 60 minutes given everything known so far: " + ctx;
-        } elif role == "not_to_do" {
-            return "Most dangerous mistake to avoid given everything known so far: " + ctx;
-        } elif role == "questions" {
-            return "What are the 2 most important follow-up questions still needed given: " + ctx;
-        } elif role == "legal_jargon" {
-            return "Explain any legal terms relevant to: " + ctx;
-        } elif role == "who_can_help" {
-            return "Who specifically should this person contact given everything known: " + ctx;
-        } elif role == "what_happens_next" {
-            return "What does the legal process look like from here given: " + ctx;
-        } else {
-            return ctx;
-        }
-    }
 }
 
 # ---------------------------------------------------------------------------
@@ -283,21 +274,21 @@ walker Summarize {
     has summary: str = "";
 
     can build_summary with `root entry {
-        situation  = self.node_outputs.get("situation_summary", "");
-        rights     = self.node_outputs.get("your_rights", "");
-        to_do      = self.node_outputs.get("to_do", "");
-        not_to_do  = self.node_outputs.get("not_to_do", "");
-        who        = self.node_outputs.get("who_can_help", "");
-        next_steps = self.node_outputs.get("what_happens_next", "");
+        assessment  = str(self.node_outputs.get("case_assessment", ""));
+        rights      = str(self.node_outputs.get("rights_protections", ""));
+        urgent      = str(self.node_outputs.get("urgent_steps", ""));
+        warnings    = str(self.node_outputs.get("critical_warnings", ""));
+        who         = str(self.node_outputs.get("help_contacts", ""));
+        outlook     = str(self.node_outputs.get("process_outlook", ""));
 
         self.summary = (
-            "CASE SUMMARY\n\n"
-            + "Situation: " + situation + "\n\n"
-            + "Your rights: " + rights + "\n\n"
-            + "Do this now: " + to_do + "\n\n"
-            + "Avoid this: " + not_to_do + "\n\n"
-            + "Who to contact: " + who + "\n\n"
-            + "What happens next: " + next_steps + "\n\n"
+            "IMMIGRATION CASE SUMMARY\n\n"
+            + "Situation Assessment: " + assessment + "\n\n"
+            + "Your Rights: " + rights + "\n\n"
+            + "Do This Now: " + urgent + "\n\n"
+            + "Avoid This: " + warnings + "\n\n"
+            + "Who to Contact: " + who + "\n\n"
+            + "What Happens Next: " + outlook + "\n\n"
             + "Full context gathered: " + self.accumulated_context
         );
 
@@ -312,7 +303,7 @@ walker Summarize {
         report {
             "summary": self.summary,
             "limit_reached": True,
-            "message": "Maximum follow-up rounds reached. Here is your full case summary to share with a lawyer."
+            "message": "Maximum follow-up rounds reached. Here is your full case summary to share with an immigration attorney."
         };
     }
 }
@@ -400,47 +391,47 @@ walker IngestDocument {
 # ---------------------------------------------------------------------------
 
 with entry {
-    situation_summary_node = LegalNode(
-        label="situation_summary",
-        aspect=LegalAspect.SITUATION_SUMMARY
+    case_assessment_node = LegalNode(
+        label="case_assessment",
+        aspect=ImmigrationAspect.CASE_ASSESSMENT
     );
-    your_rights_node = LegalNode(
-        label="your_rights",
-        aspect=LegalAspect.YOUR_RIGHTS
+    rights_protections_node = LegalNode(
+        label="rights_protections",
+        aspect=ImmigrationAspect.RIGHTS_PROTECTIONS
     );
-    to_do_node = LegalNode(
-        label="to_do",
-        aspect=LegalAspect.TO_DO
+    urgent_steps_node = LegalNode(
+        label="urgent_steps",
+        aspect=ImmigrationAspect.URGENT_STEPS
     );
-    not_to_do_node = LegalNode(
-        label="not_to_do",
-        aspect=LegalAspect.NOT_TO_DO
+    critical_warnings_node = LegalNode(
+        label="critical_warnings",
+        aspect=ImmigrationAspect.CRITICAL_WARNINGS
     );
-    questions_node = LegalNode(
-        label="questions",
-        aspect=LegalAspect.QUESTIONS
+    follow_up_questions_node = LegalNode(
+        label="follow_up_questions",
+        aspect=ImmigrationAspect.FOLLOW_UP_QUESTIONS
     );
-    legal_jargon_node = LegalNode(
-        label="legal_jargon",
-        aspect=LegalAspect.LEGAL_JARGON
+    legal_glossary_node = LegalNode(
+        label="legal_glossary",
+        aspect=ImmigrationAspect.LEGAL_GLOSSARY
     );
-    who_can_help_node = LegalNode(
-        label="who_can_help",
-        aspect=LegalAspect.WHO_CAN_HELP
+    help_contacts_node = LegalNode(
+        label="help_contacts",
+        aspect=ImmigrationAspect.HELP_CONTACTS
     );
-    what_happens_next_node = LegalNode(
-        label="what_happens_next",
-        aspect=LegalAspect.WHAT_HAPPENS_NEXT
+    process_outlook_node = LegalNode(
+        label="process_outlook",
+        aspect=ImmigrationAspect.PROCESS_OUTLOOK
     );
     case_summary = SummaryNode();
 
-    root ++> situation_summary_node;
-    root ++> your_rights_node;
-    root ++> to_do_node;
-    root ++> not_to_do_node;
-    root ++> questions_node;
-    root ++> legal_jargon_node;
-    root ++> who_can_help_node;
-    root ++> what_happens_next_node;
+    root ++> case_assessment_node;
+    root ++> rights_protections_node;
+    root ++> urgent_steps_node;
+    root ++> critical_warnings_node;
+    root ++> follow_up_questions_node;
+    root ++> legal_glossary_node;
+    root ++> help_contacts_node;
+    root ++> process_outlook_node;
     root ++> case_summary;
 }

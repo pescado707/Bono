@@ -5,17 +5,16 @@ include server;
 # ---------------------------------------------------------------------------
 
 walker TestAnalyzeSituation {
-    has test_input: str = "I was arrested by ICE at my door.";
+    has test_input: str = "I received a Notice to Appear and my green card application is pending.";
     has passed: bool = False;
 
     can run with `root entry {
-        analyzer = AnalyzeSituation(user_input=self.test_input);
-        root spawn analyzer;
+        analyzer = root spawn AnalyzeSituation(user_input=self.test_input);
 
         results = analyzer.results;
         expected_keys = [
-            "situation_summary", "your_rights", "to_do", "not_to_do",
-            "questions", "legal_jargon", "who_can_help", "what_happens_next"
+            "case_assessment", "rights_protections", "urgent_steps", "critical_warnings",
+            "follow_up_questions", "legal_glossary", "help_contacts", "process_outlook"
         ];
 
         all_present = True;
@@ -44,14 +43,13 @@ walker TestSwitchModel {
     has passed: bool = False;
 
     can run with `root entry {
-        switcher = SwitchModel(
-            target_label="situation_summary",
+        root spawn SwitchModel(
+            target_label="case_assessment",
             new_model="claude-sonnet-4-6"
         );
-        root spawn switcher;
 
-        for n in [-->] {
-            if n is LegalNode and n.label == "situation_summary" {
+        for n in [root -->] {
+            if n is LegalNode and n.label == "case_assessment" {
                 self.passed = (n.model == "claude-sonnet-4-6");
             }
         }
@@ -71,14 +69,13 @@ walker TestSwitchModelInvalid {
     has passed: bool = False;
 
     can run with `root entry {
-        switcher = SwitchModel(
-            target_label="your_rights",
+        root spawn SwitchModel(
+            target_label="rights_protections",
             new_model="fake-model-xyz"
         );
-        root spawn switcher;
 
-        for n in [-->] {
-            if n is LegalNode and n.label == "your_rights" {
+        for n in [root -->] {
+            if n is LegalNode and n.label == "rights_protections" {
                 self.passed = (n.model != "fake-model-xyz");
             }
         }
@@ -99,16 +96,14 @@ walker TestResetAll {
 
     can run with `root entry {
         # First populate nodes
-        analyzer = AnalyzeSituation(user_input="Test input for reset.");
-        root spawn analyzer;
+        root spawn AnalyzeSituation(user_input="Test input for reset.");
 
         # Then reset
-        resetter = ResetAll();
-        root spawn resetter;
+        root spawn ResetAll();
 
         # Check all nodes are cleared
         all_reset = True;
-        for n in [-->] {
+        for n in [root -->] {
             if n is LegalNode {
                 if n.value != "" or n.loop_count != 0 or n.is_ready != False {
                     all_reset = False;
@@ -133,15 +128,13 @@ walker TestFollowUp {
 
     can run with `root entry {
         # First analyze
-        analyzer = AnalyzeSituation(user_input="ICE is at my door.");
-        root spawn analyzer;
+        root spawn AnalyzeSituation(user_input="My H-1B visa expires next month.");
 
         # Then follow up
-        followup = FollowUp(
-            original_input="ICE is at my door.",
-            follow_up_answer="I have a valid visa and no criminal record."
+        followup = root spawn FollowUp(
+            original_input="My H-1B visa expires next month.",
+            follow_up_answer="My employer has already filed an I-129 extension petition."
         );
-        root spawn followup;
 
         results = followup.results;
         self.passed = len(results) > 0;
@@ -162,16 +155,18 @@ walker TestMaxLoops {
     has passed: bool = False;
 
     can run with `root entry {
-        analyzer = AnalyzeSituation(user_input="I need help with my visa.");
-        root spawn analyzer;
+        root spawn AnalyzeSituation(user_input="I am applying for a green card through my spouse.");
 
         i = 0;
+        followup = FollowUp(
+            original_input="I am applying for a green card through my spouse.",
+            follow_up_answer="Answer number 1"
+        );
         while i < 3 {
-            followup = FollowUp(
-                original_input="I need help with my visa.",
+            followup = root spawn FollowUp(
+                original_input="I am applying for a green card through my spouse.",
                 follow_up_answer="Answer number " + str(i + 1)
             );
-            root spawn followup;
             i += 1;
         }
 
@@ -192,15 +187,14 @@ walker TestIngestDocument {
     has passed: bool = False;
 
     can run with `root entry {
-        ingestor = IngestDocument(
-            content="You have the right to remain silent. Do not answer questions about your immigration status.",
-            source="ACLU Rights Guide",
-            topic="detention"
+        root spawn IngestDocument(
+            content="Green card applicants must file Form I-485 to adjust status. Asylum seekers must file Form I-589 within one year of arrival in the United States.",
+            source="USCIS Policy Manual",
+            topic="green_card_asylum"
         );
-        root spawn ingestor;
 
         chunk_count = 0;
-        for n in [-->] {
+        for n in [root -->] {
             if n is DocumentChunk {
                 chunk_count += 1;
             }
@@ -220,15 +214,39 @@ walker TestIngestDocument {
 # ---------------------------------------------------------------------------
 
 with entry {
+    # Bootstrap the graph for testing
+    root ++> LegalNode(label="case_assessment", aspect=ImmigrationAspect.CASE_ASSESSMENT);
+    root ++> LegalNode(label="rights_protections", aspect=ImmigrationAspect.RIGHTS_PROTECTIONS);
+    root ++> LegalNode(label="urgent_steps", aspect=ImmigrationAspect.URGENT_STEPS);
+    root ++> LegalNode(label="critical_warnings", aspect=ImmigrationAspect.CRITICAL_WARNINGS);
+    root ++> LegalNode(label="follow_up_questions", aspect=ImmigrationAspect.FOLLOW_UP_QUESTIONS);
+    root ++> LegalNode(label="legal_glossary", aspect=ImmigrationAspect.LEGAL_GLOSSARY);
+    root ++> LegalNode(label="help_contacts", aspect=ImmigrationAspect.HELP_CONTACTS);
+    root ++> LegalNode(label="process_outlook", aspect=ImmigrationAspect.PROCESS_OUTLOOK);
+    root ++> SummaryNode();
+
     print("Running test suite...\n");
 
-    root spawn TestAnalyzeSituation();
-    root spawn TestSwitchModel();
-    root spawn TestSwitchModelInvalid();
-    root spawn TestResetAll();
-    root spawn TestFollowUp();
-    root spawn TestMaxLoops();
-    root spawn TestIngestDocument();
+    r1 = root spawn TestAnalyzeSituation();
+    print("TestAnalyzeSituation: ", r1);
+
+    r2 = root spawn TestSwitchModel();
+    print("TestSwitchModel: ", r2);
+
+    r3 = root spawn TestSwitchModelInvalid();
+    print("TestSwitchModelInvalid: ", r3);
+
+    r4 = root spawn TestResetAll();
+    print("TestResetAll: ", r4);
+
+    r5 = root spawn TestFollowUp();
+    print("TestFollowUp: ", r5);
+
+    r6 = root spawn TestMaxLoops();
+    print("TestMaxLoops: ", r6);
+
+    r7 = root spawn TestIngestDocument();
+    print("TestIngestDocument: ", r7);
 
     print("\nAll tests complete.");
 }

@@ -46,6 +46,14 @@ provider = "anthropic"
 model = "claude-haiku-4-5-20251001"
 api_key_env = "ANTHROPIC_API_KEY"
 
+[plugins.byllm.model]
+# Ollama (local): install from https://ollama.com, then run `ollama pull llama3.2`
+default_model = "ollama/llama3.2"
+base_url = "http://localhost:11434"
+
+[plugins.byllm.call_params]
+temperature = 0.2
+
 [vectorstore]
 provider = "chroma"
 collection = "legal_docs"
