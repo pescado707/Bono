@@ -4,6 +4,8 @@ Uses walker/node/enum graph primitives with correct Jac syntax.
 """
 
 import os;
+import requests;
+import json;
 
 # ---------------------------------------------------------------------------
 # Enum
@@ -83,65 +85,68 @@ node LegalNode {
     #     }
     # }
 
-    def get_advice_py(user_situation: str, context: str) -> str {
-        # Temporarily bypass the network call to test the UI
-        return f"MOCK DATA: Analysis for {self.label}. This proves the frontend-to-backend bridge is working!";
-    }
+#     def get_advice_py(user_situation: str, context: str) -> str {
+#         # Temporarily bypass the network call to test the UI
+#         return f"MOCK DATA: Analysis for {self.label}. This proves the frontend-to-backend bridge is working!";
+#     }
 
-    def get_follow_up_questions(user_situation: str, context: str) -> list {
-        # Temporarily mocked — replace with LLM call when get_advice_py is re-enabled
-        return [
-            "Has USCIS sent you any Requests for Evidence (RFE)?",
-            "Do you have an attorney representing you in this case?",
-            "Have you received a Notice to Appear (NTA) from immigration court?"
-        ];
-    }
+#     def retrieve_value(prompt: str) -> str {
+#         context = self.load_context();
+#         # Calls the Python method which now handles the 'follow_up' logic internally
+#         new_val = self.get_advice_py(user_situation=prompt, context=context);
+#         return new_val;
+#     }
 
+#     def generate_summary() -> str {
+#         self.final_summary = (
+#             "Immigration Case Summary for " + self.label + ":\n\n"
+#             + "Advice: Based on INA and USCIS policy, document your status and maintain all official correspondence.\n\n"
+#             + "Key Resources:\n"
+#             + "- USCIS main portal: uscis.gov\n"
+#             + "- ICE detainee locator: locator.ice.gov\n"
+#             + "- AILA attorney finder: aila.org/find-a-lawyer\n\n"
+#             + "Critical: Do not miss any Notice to Appear (NTA) deadlines."
+#         );
+#         return self.final_summary;
+#     }
+
+#     def update_value(new_value: str) -> None {
+#         self.history.append({
+#             "previous": self.value,
+#             "timestamp": "now"
+#         });
+#         self.value = new_value;
+#         self.is_ready = True;
+#         self.loop_count += 1;
+#     }
+
+#     def switch_model(new_model: str) -> None {
+#         # Updated allowed list to include your local qwen
+#         allowed = ["qwen2.5", "llama3", "ollama", "gpt-4o", "gemini-1.5-pro"];
+#         if new_model in allowed {
+#             self.model = new_model;
+#         }
+#     }
+
+#     def reset() -> None {
+#         self.history = [];
+#         self.value = "";
+#         self.is_ready = False;
+#         self.loop_count = 0;
+#         self.is_done = False;
+#         self.final_summary = "";
+#     }
+# }
+
+# mock legalNode
+node LegalNode {
+    has label: str = "";
+    has value: str = "";
+    has model: str = "mock";
+
+    # Bypassing EVERYTHING to test the pipe
     def retrieve_value(prompt: str) -> str {
-        context = self.load_context();
-        # Calls the Python method which now handles the 'follow_up' logic internally
-        new_val = self.get_advice_py(user_situation=prompt, context=context);
-        return new_val;
-    }
-
-    def generate_summary() -> str {
-        self.final_summary = (
-            "Immigration Case Summary for " + self.label + ":\n\n"
-            + "Advice: Based on INA and USCIS policy, document your status and maintain all official correspondence.\n\n"
-            + "Key Resources:\n"
-            + "- USCIS main portal: uscis.gov\n"
-            + "- ICE detainee locator: locator.ice.gov\n"
-            + "- AILA attorney finder: aila.org/find-a-lawyer\n\n"
-            + "Critical: Do not miss any Notice to Appear (NTA) deadlines."
-        );
-        return self.final_summary;
-    }
-
-    def update_value(new_value: str) -> None {
-        self.history.append({
-            "previous": self.value,
-            "timestamp": "now"
-        });
-        self.value = new_value;
-        self.is_ready = True;
-        self.loop_count += 1;
-    }
-
-    def switch_model(new_model: str) -> None {
-        # Updated allowed list to include your local qwen
-        allowed = ["qwen2.5", "llama3", "ollama", "gpt-4o", "gemini-1.5-pro", "claude-sonnet-4-6"];
-        if new_model in allowed {
-            self.model = new_model;
-        }
-    }
-
-    def reset() -> None {
-        self.history = [];
-        self.value = "";
-        self.is_ready = False;
-        self.loop_count = 0;
-        self.is_done = False;
-        self.final_summary = "";
+        return "The system is working! This is mock data for " + self.label;
     }
 }
 
@@ -207,7 +212,7 @@ walker:pub AnalyzeSituation {
         here.update_value(new_val);
 
         self.results[here.label] = {
-            "value": here.value,
+            "value": here.retrieve_value(self.user_input),
             "model": here.model,
             "is_ready": here.is_ready,
             "loop_count": here.loop_count
@@ -425,48 +430,39 @@ walker IngestDocument {
 # Graph bootstrap
 # ---------------------------------------------------------------------------
 
-with entry {
-    case_assessment_node = LegalNode(
-        label="case_assessment",
-        aspect=ImmigrationAspect.CASE_ASSESSMENT
-    );
-    rights_protections_node = LegalNode(
-        label="rights_protections",
-        aspect=ImmigrationAspect.RIGHTS_PROTECTIONS
-    );
-    urgent_steps_node = LegalNode(
-        label="urgent_steps",
-        aspect=ImmigrationAspect.URGENT_STEPS
-    );
-    critical_warnings_node = LegalNode(
-        label="critical_warnings",
-        aspect=ImmigrationAspect.CRITICAL_WARNINGS
-    );
-    follow_up_questions_node = LegalNode(
-        label="follow_up_questions",
-        aspect=ImmigrationAspect.FOLLOW_UP_QUESTIONS
-    );
-    legal_glossary_node = LegalNode(
-        label="legal_glossary",
-        aspect=ImmigrationAspect.LEGAL_GLOSSARY
-    );
-    help_contacts_node = LegalNode(
-        label="help_contacts",
-        aspect=ImmigrationAspect.HELP_CONTACTS
-    );
-    process_outlook_node = LegalNode(
-        label="process_outlook",
-        aspect=ImmigrationAspect.PROCESS_OUTLOOK
-    );
-    case_summary = SummaryNode();
+can bootstrap with Root entry {
+    here ++> (case_assessment_node = spawn node:LegalNode(
+        label="case_assessment", 
+        aspect=ImmigrationAspect.ASSESSMENT
+    ));
+    
+    here ++> (rights_protections_node = spawn node:LegalNode(
+        label="rights_protections", 
+        aspect=ImmigrationAspect.RIGHTS
+    ));
 
-    root ++> case_assessment_node;
-    root ++> rights_protections_node;
-    root ++> urgent_steps_node;
-    root ++> critical_warnings_node;
-    root ++> follow_up_questions_node;
-    root ++> legal_glossary_node;
-    root ++> help_contacts_node;
-    root ++> process_outlook_node;
-    root ++> case_summary;
+    here ++> (urgent_steps_node = spawn node:LegalNode(
+        label="urgent_steps", 
+        aspect=ImmigrationAspect.URGENT
+    ));
+    here ++> (critical_warnings_node = spawn node:LegalNode(
+        label="urgent_steps", 
+        aspect=ImmigrationAspect.URGENT
+    ));
+    here ++> (follow_up_questions_node = spawn node:LegalNode(
+        label="urgent_steps", 
+        aspect=ImmigrationAspect.URGENT
+    ));
+    here ++> (legal_glossary_node = spawn node:LegalNode(
+        label="urgent_steps", 
+        aspect=ImmigrationAspect.URGENT
+    ));
+    here ++> (help_contacts_node = spawn node:LegalNode(
+        label="urgent_steps", 
+        aspect=ImmigrationAspect.URGENT
+    ));
+    here ++> (case_summary = spawn node:LegalNode(
+        label="urgent_steps", 
+        aspect=ImmigrationAspect.URGENT
+    ));
 }
