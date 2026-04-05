@@ -1,5 +1,5 @@
-async def run_analysis(user_input: str) -> str {
-    return "Your situation was sent to AnalyzeSituation.";
+sv import from ...server {
+    AnalyzeSituation, FollowUp, SwitchModel, ResetAll, GetHistory
 }
 
 def:pub app() -> JsxElement {
@@ -10,7 +10,22 @@ def:pub app() -> JsxElement {
     has showPrompt: bool = False;
     has textPrompt: str = "";
     has isLoading: bool = False;
+    has isFollowUp: bool = False;
+    has followUpInput: str = "";
+    has originalInput: str = "";
+    has selectedModel: str = "claude-haiku-4-5-20251001";
     has lastAssistantMessage: str = "Press GO to search for guidance.";
+    has situationSummary: str = "";
+    has yourRights: str = "";
+    has toDo: str = "";
+    has notToDo: str = "";
+    has questions: str = "";
+    has legalJargon: str = "";
+    has whoCanHelp: str = "";
+    has whatHappensNext: str = "";
+    has nodesExpanded: bool = False;
+    has showSummary: bool = False;
+    has caseSummary: str = "";
 
     def modeButtonClass(kind: str) -> str {
         base = "rounded-full border px-4 py-2 text-sm font-semibold transition ";
@@ -23,6 +38,14 @@ def:pub app() -> JsxElement {
     def languageButtonClass(kind: str) -> str {
         base = "rounded-full border px-4 py-2 text-sm font-semibold transition ";
         if selectedLanguage == kind {
+            return base + "border-emerald-700 bg-emerald-700 text-white";
+        }
+        return base + "border-emerald-300 bg-white text-emerald-900";
+    }
+
+    def modelButtonClass(kind: str) -> str {
+        base = "rounded-full border px-3 py-1 text-xs font-semibold transition ";
+        if selectedModel == kind {
             return base + "border-emerald-700 bg-emerald-700 text-white";
         }
         return base + "border-emerald-300 bg-white text-emerald-900";
@@ -51,7 +74,7 @@ def:pub app() -> JsxElement {
 
     def statusText() -> str {
         if isLoading {
-            return "Analyzing...";
+            return "Analyzing your situation...";
         }
         return lastAssistantMessage;
     }
@@ -66,13 +89,28 @@ def:pub app() -> JsxElement {
     def toggleAutoErase() -> None { autoErase = not autoErase; }
     def closePrompt() -> None { showPrompt = False; }
     def updatePrompt(e: any) -> None { textPrompt = e.target.value; }
+    def updateFollowUpInput(e: any) -> None { followUpInput = e.target.value; }
 
     def goAction() -> None {
         if selectedMode == "text" {
             showPrompt = True;
             return;
         }
-        lastAssistantMessage = "AnalyzeSituation is ready for " + selectedMode + " mode.";
+        lastAssistantMessage = "Please use text mode to describe your situation.";
+    }
+
+    def unpackResults(results: dict) -> None {
+        situationSummary = results.get("situation_summary", {}).get("value", "");
+        yourRights = results.get("your_rights", {}).get("value", "");
+        toDo = results.get("to_do", {}).get("value", "");
+        notToDo = results.get("not_to_do", {}).get("value", "");
+        questions = results.get("questions", {}).get("value", "");
+        legalJargon = results.get("legal_jargon", {}).get("value", "");
+        whoCanHelp = results.get("who_can_help", {}).get("value", "");
+        whatHappensNext = results.get("what_happens_next", {}).get("value", "");
+        lastAssistantMessage = questions;
+        nodesExpanded = True;
+        isFollowUp = True;
     }
 
     async def submitPrompt() -> None {
@@ -80,16 +118,79 @@ def:pub app() -> JsxElement {
             return;
         }
         isLoading = True;
+        showSummary = False;
+        originalInput = textPrompt.strip();
         lastAssistantMessage = "Analyzing your situation...";
-        lastAssistantMessage = await run_analysis(textPrompt);
+
+        result = await root spawn AnalyzeSituation(user_input=originalInput);
+
+        if result.reports and len(result.reports) > 0 {
+            unpackResults(result.reports[0]);
+        } else {
+            lastAssistantMessage = "Something went wrong. Please try again.";
+        }
+
         showPrompt = False;
         textPrompt = "";
         isLoading = False;
     }
 
+    async def submitFollowUp() -> None {
+        if not followUpInput.strip() {
+            return;
+        }
+        isLoading = True;
+        lastAssistantMessage = "Analyzing your follow-up...";
+
+        result = await root spawn FollowUp(
+            original_input=originalInput,
+            follow_up_answer=followUpInput.strip()
+        );
+
+        if result.reports and len(result.reports) > 0 {
+            data = result.reports[0];
+            if data.get("limit_reached", False) {
+                caseSummary = data.get("summary", "");
+                showSummary = True;
+                isFollowUp = False;
+                lastAssistantMessage = "Summary complete. Share this with a lawyer.";
+            } else {
+                unpackResults(data.get("results", {}));
+            }
+        }
+
+        followUpInput = "";
+        isLoading = False;
+    }
+
+    async def switchModel(new_model: str) -> None {
+        selectedModel = new_model;
+        await root spawn SwitchModel(target_label="all", new_model=new_model);
+        lastAssistantMessage = "Model switched to " + new_model + ". Send a new prompt to use it.";
+    }
+
+    async def resetSession() -> None {
+        await root spawn ResetAll();
+        situationSummary = "";
+        yourRights = "";
+        toDo = "";
+        notToDo = "";
+        questions = "";
+        legalJargon = "";
+        whoCanHelp = "";
+        whatHappensNext = "";
+        caseSummary = "";
+        nodesExpanded = False;
+        showSummary = False;
+        isFollowUp = False;
+        originalInput = "";
+        lastAssistantMessage = "Session reset. Press GO to start again.";
+    }
+
     return (
         <div className="min-h-screen bg-emerald-50 text-emerald-950">
             <div className="mx-auto max-w-5xl px-6 py-6">
+
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex flex-wrap gap-2">
                         <button className={modeButtonClass("text")} onClick={selectText}>Text</button>
@@ -102,10 +203,18 @@ def:pub app() -> JsxElement {
                     </div>
                 </div>
 
-                <div className="mt-6 flex flex-wrap gap-3">
+                <div className="mt-4 flex flex-wrap gap-2">
+                    <button className={modelButtonClass("claude-haiku-4-5-20251001")} onClick={lambda -> None { switchModel("claude-haiku-4-5-20251001"); }}>Haiku — fast</button>
+                    <button className={modelButtonClass("claude-sonnet-4-6")} onClick={lambda -> None { switchModel("claude-sonnet-4-6"); }}>Sonnet — balanced</button>
+                    <button className={modelButtonClass("claude-opus-4-6")} onClick={lambda -> None { switchModel("claude-opus-4-6"); }}>Opus — powerful</button>
+                    <p className="ml-auto self-center text-xs text-emerald-700">Model: {selectedModel}</p>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-3">
                     <button className="rounded-full border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-900" onClick={enableQuietMode}>Quiet Mode</button>
                     <button className="rounded-full border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-900" onClick={disableQuietMode}>Normal Mode</button>
                     <button className={autoEraseClass()} onClick={toggleAutoErase}>Auto-erase</button>
+                    <button className="rounded-full border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700" onClick={resetSession}>Reset session</button>
                 </div>
 
                 <div className={quietBannerClass()}>
@@ -119,10 +228,10 @@ def:pub app() -> JsxElement {
                 </div>
 
                 <div className={panelClass()}>
-                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Text prompt</p>
-                    <textarea className="mt-3 min-h-32 w-full rounded-2xl border border-emerald-200 p-4 text-base text-emerald-950" value={textPrompt} onChange={updatePrompt} />
+                    <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Describe your situation</p>
+                    <textarea className="mt-3 min-h-32 w-full rounded-2xl border border-emerald-200 p-4 text-base text-emerald-950" value={textPrompt} onChange={updatePrompt} placeholder="Describe what is happening in your own words..." />
                     <div className="mt-4 flex gap-3">
-                        <button className="rounded-full bg-emerald-700 px-5 py-2 text-sm font-semibold text-white" onClick={submitPrompt}>Send to AnalyzeSituation</button>
+                        <button className="rounded-full bg-emerald-700 px-5 py-2 text-sm font-semibold text-white" onClick={submitPrompt}>Analyze</button>
                         <button className="rounded-full border border-emerald-300 bg-white px-5 py-2 text-sm font-semibold text-emerald-900" onClick={closePrompt}>Cancel</button>
                     </div>
                 </div>
@@ -131,6 +240,66 @@ def:pub app() -> JsxElement {
                     <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Status</p>
                     <p className="mt-3 text-base text-emerald-950">{statusText()}</p>
                 </div>
+
+                {nodesExpanded and not showSummary and
+                    <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                        <div className="rounded-3xl border border-emerald-200 bg-white p-5 shadow-sm">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Situation</p>
+                            <p className="mt-2 text-sm text-emerald-950">{situationSummary}</p>
+                        </div>
+                        <div className="rounded-3xl border border-blue-200 bg-blue-50 p-5 shadow-sm">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Your rights</p>
+                            <p className="mt-2 text-sm text-blue-950">{yourRights}</p>
+                        </div>
+                        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Do this now</p>
+                            <p className="mt-2 text-sm text-emerald-950">{toDo}</p>
+                        </div>
+                        <div className="rounded-3xl border border-red-200 bg-red-50 p-5 shadow-sm">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-red-700">Do not do this</p>
+                            <p className="mt-2 text-sm text-red-950">{notToDo}</p>
+                        </div>
+                        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Follow-up question</p>
+                            <p className="mt-2 text-sm text-amber-950">{questions}</p>
+                        </div>
+                        <div className="rounded-3xl border border-purple-200 bg-purple-50 p-5 shadow-sm">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">Legal terms</p>
+                            <p className="mt-2 text-sm text-purple-950">{legalJargon}</p>
+                        </div>
+                        <div className="rounded-3xl border border-cyan-200 bg-cyan-50 p-5 shadow-sm">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Who can help</p>
+                            <p className="mt-2 text-sm text-cyan-950">{whoCanHelp}</p>
+                        </div>
+                        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">What happens next</p>
+                            <p className="mt-2 text-sm text-slate-950">{whatHappensNext}</p>
+                        </div>
+                    </div>
+                }
+
+                {isFollowUp and not showSummary and
+                    <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-amber-700">Answer the follow-up question above</p>
+                        <div className="mt-3 flex gap-3">
+                            <input
+                                className="w-full rounded-2xl border border-amber-200 bg-white px-4 py-3 text-sm text-emerald-950 outline-none focus:border-emerald-500"
+                                value={followUpInput}
+                                onChange={updateFollowUpInput}
+                                placeholder="Type your answer here..."
+                            />
+                            <button className="rounded-2xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white" onClick={submitFollowUp}>Answer</button>
+                        </div>
+                    </div>
+                }
+
+                {showSummary and
+                    <div className="mt-6 rounded-3xl border border-emerald-300 bg-emerald-50 p-6 shadow-sm">
+                        <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Case summary — share this with a lawyer</p>
+                        <pre className="mt-3 whitespace-pre-wrap text-sm text-emerald-950">{caseSummary}</pre>
+                    </div>
+                }
+
             </div>
         </div>
     );
