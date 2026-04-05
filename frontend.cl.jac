@@ -10,7 +10,7 @@ def:pub app() -> JsxElement {
     has showPrompt: bool = False;
     has textPrompt: str = "";
     has isLoading: bool = False;
-    has lastAssistantMessage: str = "Press GO to get emergency legal guidance.";
+    has lastAssistantMessage: str = "Press GO to search for guidance.";
 
     def modeButtonClass(kind: str) -> str {
         base = "rounded-full border px-4 py-2 text-sm font-semibold transition ";
@@ -109,7 +109,7 @@ def:pub app() -> JsxElement {
                 </div>
 
                 <div className={quietBannerClass()}>
-                    Quiet Mode is active. Press Enter to close the tab immediately if needed. The GO button still works.
+                    Quiet Mode is active. Press Enter to close the tab immediately if needed.
                 </div>
 
                 <div className="mt-10 flex justify-center">
