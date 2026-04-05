@@ -1,4 +1,5 @@
 def:pub app() -> JsxElement {
+    has selectedModel: str = "claude-haiku-4-5-20251001";
     has isLoading: bool = False;
     has apiKey: str = "YOUR_KEY_HERE";
     has selectedScenario: str = "ice";

@@ -4,6 +4,7 @@ node LegalNode {
     has is_ready: bool = False;
     has history: list = [];
     has model: str = "claude-haiku-4-5-20251001";
+    has loop_count: int = 0;
 
     can update_value(new_value: str) -> None {
         self.history.append({
@@ -12,6 +13,7 @@ node LegalNode {
         });
         self.value = new_value;
         self.is_ready = True;
+        self.loop_count += 1;
     }
 
     can switch_model(new_model: str) -> None {
@@ -31,6 +33,19 @@ node LegalNode {
     can get_history() -> list {
         return self.history;
     }
+
+    can reset() -> None {
+        self.history = [];
+        self.value = "";
+        self.is_ready = False;
+        self.loop_count = 0;
+    }
+}
+
+node SummaryNode {
+    has value: str = "";
+    has is_ready: bool = False;
+    has generated_at_loop: int = 0;
 }
 
 walker SwitchModel {
@@ -59,12 +74,16 @@ walker AnalyzeSituation {
 
     can visit with `root entry {
         for node in [-->] {
-            node.update_value(self.get_prompt(node.label));
-            self.results[node.label] = {
-                "value": node.value,
-                "model": node.model,
-                "history_count": node.history.length
-            };
+            if node is LegalNode {
+                node.reset();
+                node.update_value(self.get_prompt(node.label));
+                self.results[node.label] = {
+                    "value": node.value,
+                    "model": node.model,
+                    "loop_count": node.loop_count,
+                    "history_count": node.history.length
+                };
+            }
         }
         report self.results;
     }
@@ -84,8 +103,107 @@ walker AnalyzeSituation {
     }
 }
 
+walker FollowUp {
+    has original_input: str = "";
+    has follow_up_answer: str = "";
+    has accumulated_context: str = "";
+    has max_loops: int = 3;
+    has results: dict = {};
+    has limit_reached: bool = False;
+    has node_outputs: dict = {};
+
+    can visit with `root entry {
+        self.accumulated_context = self.original_input
+            + " Additional context from follow-up: "
+            + self.follow_up_answer;
+
+        for node in [-->] {
+            if node is LegalNode {
+                self.node_outputs[node.label] = node.value;
+            }
+        }
+
+        visit [-->];
+
+        if self.limit_reached {
+            spawn Summarize(node_outputs=self.node_outputs, accumulated_context=self.accumulated_context) on here;
+        }
+    }
+
+    can collect with LegalNode entry {
+        if here.loop_count >= self.max_loops {
+            self.limit_reached = True;
+            self.node_outputs[here.label] = here.value;
+            visit [-->];
+            return;
+        }
+
+        here.update_value(self.get_prompt(here.label));
+        self.results[here.label] = {
+            "value": here.value,
+            "model": here.model,
+            "loop_count": here.loop_count,
+            "history_count": here.history.length,
+            "limit_reached": False
+        };
+        visit [-->];
+    }
+
+    can get_prompt(role: str) -> str {
+        prompts = {
+            "situation_summary": f"Summarize this legal situation in 2 plain sentences, incorporating the latest context: {self.accumulated_context}",
+            "your_rights": f"List the 2-3 most critical legal rights that apply, incorporating the latest context: {self.accumulated_context}",
+            "to_do": f"Most important action in the next 60 minutes given everything known so far: {self.accumulated_context}",
+            "not_to_do": f"Most dangerous mistake to avoid given everything known so far: {self.accumulated_context}",
+            "questions": f"What are the 2 most important follow-up questions still needed given: {self.accumulated_context}",
+            "legal_jargon": f"Explain any legal terms relevant to: {self.accumulated_context}",
+            "who_can_help": f"Who specifically should this person contact given everything known: {self.accumulated_context}",
+            "what_happens_next": f"What does the legal process look like from here given: {self.accumulated_context}"
+        };
+        return prompts[role] if role in prompts else self.accumulated_context;
+    }
+}
+
+walker Summarize {
+    has node_outputs: dict = {};
+    has accumulated_context: str = "";
+    has summary: str = "";
+
+    can visit with `root entry {
+        situation = self.node_outputs.get("situation_summary", "");
+        rights = self.node_outputs.get("your_rights", "");
+        to_do = self.node_outputs.get("to_do", "");
+        not_to_do = self.node_outputs.get("not_to_do", "");
+        who = self.node_outputs.get("who_can_help", "");
+        next_steps = self.node_outputs.get("what_happens_next", "");
+
+        self.summary = "CASE SUMMARY\n\n"
+            + "Situation: " + situation + "\n\n"
+            + "Your rights: " + rights + "\n\n"
+            + "Do this now: " + to_do + "\n\n"
+            + "Avoid this: " + not_to_do + "\n\n"
+            + "Who to contact: " + who + "\n\n"
+            + "What happens next: " + next_steps + "\n\n"
+            + "Full context gathered: " + self.accumulated_context;
+
+        for node in [-->] {
+            if node is SummaryNode {
+                node.value = self.summary;
+                node.is_ready = True;
+                node.generated_at_loop = 3;
+            }
+        }
+
+        report {
+            "summary": self.summary,
+            "limit_reached": True,
+            "message": "Maximum follow-up rounds reached. Here is your full case summary to share with a lawyer."
+        };
+    }
+}
+
 walker GetHistory {
-    has target_label: str = "";
+    has target_label: str = "all";
     has results: list = [];
 
     can visit with `root entry {
@@ -98,9 +216,22 @@ walker GetHistory {
                 "label": here.label,
                 "current_value": here.value,
                 "model": here.model,
+                "loop_count": here.loop_count,
                 "history": here.get_history()
             });
         }
+        visit [-->];
+    }
+}
+
+walker ResetAll {
+    can visit with `root entry {
+        visit [-->];
+    }
+
+    can reset with LegalNode entry {
+        here.reset();
+        report {"label": here.label, "status": "reset"};
         visit [-->];
     }
 }
@@ -114,6 +245,7 @@ with entry {
     legal_jargon = LegalNode(label="legal_jargon");
     who_can_help = LegalNode(label="who_can_help");
     what_happens_next = LegalNode(label="what_happens_next");
+    case_summary = SummaryNode();
 
     root ++> situation_summary;
     root ++> your_rights;
@@ -123,4 +255,5 @@ with entry {
     root ++> legal_jargon;
     root ++> who_can_help;
     root ++> what_happens_next;
+    root ++> case_summary;
 }
