@@ -16,6 +16,9 @@ def:pub app() -> JsxElement {
     has isFollowUp: bool = False;
     has followUpInput: str = "";
     has originalInput: str = "";
+    # For animation:
+    has isNodesExpanded: bool = False; 
+    has analyzedResults: dict = {};
 
     def languageLabel(kind: str) -> str {
         if kind == "arabic" { return "العربية"; }
@@ -259,6 +262,7 @@ def:pub app() -> JsxElement {
             if results["limit_reached"] {
                 lastAssistantMessage = results["summary"];
                 isFollowUp = False;
+                isNodesExpanded = False;
             } else {
                 situationSummary = results["situation_summary"]["value"];
                 yourRights = results["your_rights"]["value"];
@@ -270,6 +274,7 @@ def:pub app() -> JsxElement {
                 whatHappensNext = results["what_happens_next"]["value"];
                 lastAssistantMessage = questions;
                 isFollowUp = True;
+                isNodesExpanded = True;
             }
             isLoading = False;
         });
@@ -498,11 +503,76 @@ def:pub app() -> JsxElement {
                         </div>
                     }
                     {isFollowUp and
-                        <div className="mt-3 rounded-2xl border border-cyan-400/30 bg-white/5 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Answer the question above</p>
-                            <div className="mt-2 grid gap-3 lg:grid-cols-[1fr_auto]">
-                                <input className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/30" value={followUpInput} onChange={updateFollowUpInput} placeholder="Type your answer here" />
-                                <button className="rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300" onClick={submitFollowUp}><span>Answer</span></button>
+                        <div className="relative flex h-[500px] w-full items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-black/20 shadow-card mt-4">
+                            
+                            <!--Node 1: Situation Summary (Top)-->
+                            <div className={"absolute transition-all duration-500 ease-out " + (isNodesExpanded ? "translate-y-[-140px] opacity-100 scale-100" : "translate-y-0 opacity-0 scale-50 pointer-events-none")}>
+                                <button className="flex h-20 w-28 flex-col items-center justify-center rounded-xl bg-blue-500/20 border border-blue-400/50 p-2 shadow-soft hover:bg-blue-500/30 backdrop-blur-sm">
+                                    <span className="text-[10px] font-semibold text-blue-200 text-center uppercase tracking-wider mb-1">Summary</span>
+                                    <span className="text-xs text-white text-center line-clamp-2">{analyzedResults.get("situation_summary", {}).get("value", "...")}</span>
+                                </button>
+                            </div>
+
+                            <!--Node 2: Your Rights (Top Right)-->
+                            <div className={"absolute transition-all duration-500 ease-out delay-[50ms] " + (isNodesExpanded ? "translate-x-[110px] translate-y-[-110px] opacity-100 scale-100" : "translate-x-0 translate-y-0 opacity-0 scale-50 pointer-events-none")}>
+                                <button className="flex h-20 w-28 flex-col items-center justify-center rounded-xl bg-emerald-500/20 border border-emerald-400/50 p-2 shadow-soft hover:bg-emerald-500/30 backdrop-blur-sm">
+                                    <span className="text-[10px] font-semibold text-emerald-200 text-center uppercase tracking-wider mb-1">Your Rights</span>
+                                </button>
+                            </div>
+
+                            <!--Node 3: To Do (Right)-->
+                            <div className={"absolute transition-all duration-500 ease-out delay-[100ms] " + (isNodesExpanded ? "translate-x-[150px] opacity-100 scale-100" : "translate-x-0 opacity-0 scale-50 pointer-events-none")}>
+                                <button className="flex h-20 w-28 flex-col items-center justify-center rounded-xl bg-amber-500/20 border border-amber-400/50 p-2 shadow-soft hover:bg-amber-500/30 backdrop-blur-sm">
+                                    <span className="text-[10px] font-semibold text-amber-200 text-center uppercase tracking-wider mb-1">To Do Now</span>
+                                </button>
+                            </div>
+
+                            <!--Node 4: Not To Do (Bottom Right)-->
+                            <div className={"absolute transition-all duration-500 ease-out delay-[150ms] " + (isNodesExpanded ? "translate-x-[110px] translate-y-[110px] opacity-100 scale-100" : "translate-x-0 translate-y-0 opacity-0 scale-50 pointer-events-none")}>
+                                <button className="flex h-20 w-28 flex-col items-center justify-center rounded-xl bg-red-500/20 border border-red-400/50 p-2 shadow-soft hover:bg-red-500/30 backdrop-blur-sm">
+                                    <span className="text-[10px] font-semibold text-red-200 text-center uppercase tracking-wider mb-1">Not To Do</span>
+                                </button>
+                            </div>
+
+                            <!--Node 5: Questions (Bottom)-->
+                            <div className={"absolute transition-all duration-500 ease-out delay-[200ms] " + (isNodesExpanded ? "translate-y-[140px] opacity-100 scale-100" : "translate-y-0 opacity-0 scale-50 pointer-events-none")}>
+                                <button className="flex h-20 w-28 flex-col items-center justify-center rounded-xl bg-cyan-500/20 border border-cyan-400/50 p-2 shadow-soft hover:bg-cyan-500/30 backdrop-blur-sm">
+                                    <span className="text-[10px] font-semibold text-cyan-200 text-center uppercase tracking-wider mb-1">Questions</span>
+                                </button>
+                            </div>
+
+                            <!--Node 6: Legal Jargon (Bottom Left)-->
+                            <div className={"absolute transition-all duration-500 ease-out delay-[250ms] " + (isNodesExpanded ? "translate-x-[-110px] translate-y-[110px] opacity-100 scale-100" : "translate-x-0 translate-y-0 opacity-0 scale-50 pointer-events-none")}>
+                                <button className="flex h-20 w-28 flex-col items-center justify-center rounded-xl bg-purple-500/20 border border-purple-400/50 p-2 shadow-soft hover:bg-purple-500/30 backdrop-blur-sm">
+                                    <span className="text-[10px] font-semibold text-purple-200 text-center uppercase tracking-wider mb-1">Legal Jargon</span>
+                                </button>
+                            </div>
+
+                            <!--Node 7: Who Can Help (Left)-->
+                            <div className={"absolute transition-all duration-500 ease-out delay-[300ms] " + (isNodesExpanded ? "translate-x-[-150px] opacity-100 scale-100" : "translate-x-0 opacity-0 scale-50 pointer-events-none")}>
+                                <button className="flex h-20 w-28 flex-col items-center justify-center rounded-xl bg-orange-500/20 border border-orange-400/50 p-2 shadow-soft hover:bg-orange-500/30 backdrop-blur-sm">
+                                    <span className="text-[10px] font-semibold text-orange-200 text-center uppercase tracking-wider mb-1">Who Can Help</span>
+                                </button>
+                            </div>
+
+                            <!--Node 8: What Happens Next (Top Left)-->
+                            <div className={"absolute transition-all duration-500 ease-out delay-[350ms] " + (isNodesExpanded ? "translate-x-[-110px] translate-y-[-110px] opacity-100 scale-100" : "translate-x-0 translate-y-0 opacity-0 scale-50 pointer-events-none")}>
+                                <button className="flex h-20 w-28 flex-col items-center justify-center rounded-xl bg-indigo-500/20 border border-indigo-400/50 p-2 shadow-soft hover:bg-indigo-500/30 backdrop-blur-sm">
+                                    <span className="text-[10px] font-semibold text-indigo-200 text-center uppercase tracking-wider mb-1">Next Steps</span>
+                                </button>
+                            </div>
+
+                            <!--Central Main Button-->
+                            <div className="z-10 flex flex-col items-center">
+                                <button 
+                                    onClick={lambda -> None { isNodesExpanded = not isNodesExpanded; }}
+                                    className="group relative flex h-28 w-28 items-center justify-center rounded-full bg-cyan-500 text-slate-950 shadow-xl transition-transform hover:scale-105 active:scale-95"
+                                >
+                                    <span className="text-sm font-bold text-center p-2">
+                                        {isNodesExpanded ? "Collapse" : "View Analysis"}
+                                    </span>
+                                    <div className="absolute -inset-2 -z-10 rounded-full bg-cyan-400 opacity-30 blur-lg transition-all group-hover:opacity-50"></div>
+                                </button>
                             </div>
                         </div>
                     }
