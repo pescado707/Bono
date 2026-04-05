@@ -35,7 +35,7 @@ def post(path, body, token=None):
     if token:
         headers["Authorization"] = f"Bearer {token}"
     req = urllib.request.Request(f"{BASE_URL}{path}", data=data, headers=headers, method="POST")
-    with urllib.request.urlopen(req, timeout=15) as resp:
+    with urllib.request.urlopen(req, timeout=180) as resp:
         return json.loads(resp.read())
 
 

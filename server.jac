@@ -14,7 +14,7 @@ RAG pipeline:
 """
 
 import os;
-import from ollama_client { ollama_embed, ollama_generate, rag_retrieve, join_chunks, score_to_str }
+import from ollama_client { ollama_embed, ollama_generate, rag_retrieve, retrieve_tfidf, format_retrieved_response, join_chunks, score_to_str }
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -229,23 +229,12 @@ node LegalNode {
         if self.label in CONSTITUTION_NODES {
             constitution = self.load_constitution();
             if len(constitution) > 0 {
-                cache_path = os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)),
-                    "constitution_embeddings_cache.json"
-                );
-                rag_result = rag_retrieve(
-                    query=prompt,
-                    text=constitution,
-                    top_k=3,
-                    cache_path=cache_path,
-                    embed_model=EMBED_MODEL
-                );
-                top_chunks = rag_result[0];
-                max_sim = rag_result[1];
+                tfidf_result = retrieve_tfidf(prompt, constitution, 3);
+                top_chunks = tfidf_result[0];
+                max_sim = tfidf_result[1];
                 self.similarity_score = max_sim;
 
-                context = join_chunks(top_chunks);
-                advice = self.get_advice_py(user_situation=prompt, context=context);
+                advice: str = str(format_retrieved_response(prompt, top_chunks, self.label, max_sim));
 
                 if max_sim < SIMILARITY_THRESHOLD {
                     self.needs_followup = True;
@@ -264,7 +253,8 @@ node LegalNode {
         }
 
         context = self.load_context();
-        advice = self.get_advice_py(user_situation=prompt, context=context);
+        tfidf_result = retrieve_tfidf(prompt, context, 3);
+        advice: str = str(format_retrieved_response(prompt, tfidf_result[0], self.label, tfidf_result[1]));
         return advice + self.get_relevant_links();
     }
 
