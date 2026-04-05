@@ -104,7 +104,7 @@ def:pub app() -> JsxElement {
         legalJargon = results.get("legal_glossary", {}).get("value", "");
         whoCanHelp = results.get("help_contacts", {}).get("value", "");
         whatHappensNext = results.get("process_outlook", {}).get("value", "");
-        lastAssistantMessage = questions if questions != "" else "Analysis complete. See the nodes below.";
+        lastAssistantMessage = "Analysis complete. Answer the follow-up question below to refine your guidance." if questions != "" else "Analysis complete. See the guidance panels below.";
         nodesExpanded = True;
         isFollowUp = True;
     }
@@ -266,35 +266,35 @@ def:pub app() -> JsxElement {
                     <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                         <div className="rounded-3xl border border-emerald-200 bg-white p-5 shadow-sm">
                             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Situation</p>
-                            <p className="mt-2 text-sm text-emerald-950">{situationSummary}</p>
+                            <p className="mt-2 text-sm text-emerald-950 whitespace-pre-wrap overflow-auto max-h-48">{situationSummary}</p>
                         </div>
                         <div className="rounded-3xl border border-blue-200 bg-blue-50 p-5 shadow-sm">
                             <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Your rights</p>
-                            <p className="mt-2 text-sm text-blue-950">{yourRights}</p>
+                            <p className="mt-2 text-sm text-blue-950 whitespace-pre-wrap overflow-auto max-h-48">{yourRights}</p>
                         </div>
                         <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm">
                             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Do this now</p>
-                            <p className="mt-2 text-sm text-emerald-950">{toDo}</p>
+                            <p className="mt-2 text-sm text-emerald-950 whitespace-pre-wrap overflow-auto max-h-48">{toDo}</p>
                         </div>
                         <div className="rounded-3xl border border-red-200 bg-red-50 p-5 shadow-sm">
                             <p className="text-xs font-semibold uppercase tracking-wide text-red-700">Do not do this</p>
-                            <p className="mt-2 text-sm text-red-950">{notToDo}</p>
+                            <p className="mt-2 text-sm text-red-950 whitespace-pre-wrap overflow-auto max-h-48">{notToDo}</p>
                         </div>
                         <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Follow-up question</p>
-                            <p className="mt-2 text-sm text-amber-950">{questions}</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Follow-up questions</p>
+                            <p className="mt-2 text-sm text-amber-950 whitespace-pre-wrap overflow-auto max-h-48">{questions}</p>
                         </div>
                         <div className="rounded-3xl border border-purple-200 bg-purple-50 p-5 shadow-sm">
                             <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">Legal terms</p>
-                            <p className="mt-2 text-sm text-purple-950">{legalJargon}</p>
+                            <p className="mt-2 text-sm text-purple-950 whitespace-pre-wrap overflow-auto max-h-48">{legalJargon}</p>
                         </div>
                         <div className="rounded-3xl border border-cyan-200 bg-cyan-50 p-5 shadow-sm">
                             <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Who can help</p>
-                            <p className="mt-2 text-sm text-cyan-950">{whoCanHelp}</p>
+                            <p className="mt-2 text-sm text-cyan-950 whitespace-pre-wrap overflow-auto max-h-48">{whoCanHelp}</p>
                         </div>
                         <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
                             <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">What happens next</p>
-                            <p className="mt-2 text-sm text-slate-950">{whatHappensNext}</p>
+                            <p className="mt-2 text-sm text-slate-950 whitespace-pre-wrap overflow-auto max-h-48">{whatHappensNext}</p>
                         </div>
                     </div>
                 }
