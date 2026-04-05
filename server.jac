@@ -198,7 +198,7 @@ walker:pub AnalyzeSituation {
         here.update_value(new_val);
 
         self.results[here.label] = {
-            "value": here.value,
+            "value": here.retrieve_value(self.user_input),
             "model": here.model,
             "is_ready": here.is_ready,
             "loop_count": here.loop_count
