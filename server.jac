@@ -1,22 +1,38 @@
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 
+enum LegalAspect {
+    situation_summary,
+    your_rights,
+    to_do,
+    not_to_do,
+    questions,
+    legal_jargon,
+    who_can_help,
+    what_happens_next
+}
+
 node LegalNode {
     has label: str = "";
+    has aspect: LegalAspect;
     has value: str = "";
     has is_ready: bool = False;
     has history: list = [];
     has model: str = "claude-haiku-4-5-20251001";
     has loop_count: int = 0;
+    has dataset: str = "";
 
     can retrieve_value(prompt: str) -> str {
-    documents = SimpleDirectoryReader("data").load_data()
+        search_params = {"query": prompt, "top_k": 5};
+        if self.dataset {
+            search_params["filter"] = {"topic": self.dataset};
+        }
+        relevant_chunks = vectorstore.search(**search_params);
 
-    # 2. Automatically chunk, embed, and store them in memory
-    index = VectorStoreIndex.from_documents(documents)
-
-    # 3. Create a query engine and ask a question
-    query_engine = index.as_query_engine()
-    response = query_engine.query()
+        context = "";
+        for chunk in relevant_chunks {
+            context += chunk.content + "\n\n";
+        }
+        return context;
     }
 
     can update_value(new_value: str) -> None {
@@ -92,8 +108,22 @@ walker AnalyzeSituation {
     has user_input: str = "";
     has results: dict = {};
     has retrieved_context: str = "";
+    has relevant_aspects: list = [];
 
     can visit with `root entry {
+        # Determine relevant aspects based on user input
+        if "arrest" in self.user_input.lower() or "raid" in self.user_input.lower() or "ice" in self.user_input.lower() or "door" in self.user_input.lower() {
+            self.relevant_aspects = [LegalAspect.situation_summary, LegalAspect.your_rights, LegalAspect.to_do, LegalAspect.not_to_do, LegalAspect.who_can_help];
+        } elif "detention" in self.user_input.lower() or "jail" in self.user_input.lower() {
+            self.relevant_aspects = [LegalAspect.situation_summary, LegalAspect.your_rights, LegalAspect.to_do, LegalAspect.questions, LegalAspect.who_can_help, LegalAspect.what_happens_next];
+        } elif "order" in self.user_input.lower() or "deport" in self.user_input.lower() or "notice" in self.user_input.lower() {
+            self.relevant_aspects = [LegalAspect.situation_summary, LegalAspect.your_rights, LegalAspect.to_do, LegalAspect.not_to_do, LegalAspect.questions, LegalAspect.what_happens_next];
+        } elif "family" in self.user_input.lower() or "missing" in self.user_input.lower() {
+            self.relevant_aspects = [LegalAspect.situation_summary, LegalAspect.questions, LegalAspect.who_can_help, LegalAspect.what_happens_next];
+        } else {
+            self.relevant_aspects = [LegalAspect.situation_summary, LegalAspect.questions];
+        }
+
         relevant_chunks = vectorstore.search(
             query=self.user_input,
             top_k=3
@@ -104,35 +134,20 @@ walker AnalyzeSituation {
             self.retrieved_context += chunk.content + "\n\n";
         }
 
-        for node in [-->] {
-            if node is LegalNode {
-                node.reset();
-                node.update_value(self.get_prompt(node.label));
-                self.results[node.label] = {
-                    "value": node.value,
-                    "model": node.model,
-                    "loop_count": node.loop_count,
-                    "sources": relevant_chunks
-                };
-            }
-        }
+        visit [-->] by (here.aspect in self.relevant_aspects);
         report self.results;
     }
 
-    can get_prompt(role: str) -> str {
-        base = f"Use this legal reference material to inform your answer:\n\n{self.retrieved_context}\n\nUser situation: {self.user_input}\n\n";
-
-        prompts = {
-            "situation_summary": base + "Summarize this legal situation in 2 plain sentences.",
-            "your_rights": base + "List the 2-3 most critical legal rights that apply.",
-            "to_do": base + "What is the single most important action in the next 60 minutes.",
-            "not_to_do": base + "What is the most dangerous mistake to avoid and why.",
-            "questions": base + "What are the 2 most important follow-up questions still needed.",
-            "legal_jargon": base + "Explain any legal terms relevant to this situation in plain language.",
-            "who_can_help": base + "Who specifically should this person contact and what should they say.",
-            "what_happens_next": base + "What does the legal process typically look like from here."
+    can visit with LegalNode entry {
+        here.reset();
+        here.update_value(self.get_prompt(here.label));
+        self.results[here.label] = {
+            "value": here.value,
+            "model": here.model,
+            "loop_count": here.loop_count,
+            "sources": []  # relevant_chunks from entry
         };
-        return prompts[role] if role in prompts else base;
+        visit [-->];
     }
 }
 
@@ -307,14 +322,14 @@ walker IngestDocument {
 }
 
 with entry {
-    situation_summary = LegalNode(label="situation_summary");
-    your_rights = LegalNode(label="your_rights");
-    to_do = LegalNode(label="to_do");
-    not_to_do = LegalNode(label="not_to_do");
-    questions = LegalNode(label="questions");
-    legal_jargon = LegalNode(label="legal_jargon");
-    who_can_help = LegalNode(label="who_can_help");
-    what_happens_next = LegalNode(label="what_happens_next");
+    situation_summary = LegalNode(label="situation_summary", aspect=LegalAspect.situation_summary);
+    your_rights = LegalNode(label="your_rights", aspect=LegalAspect.your_rights);
+    to_do = LegalNode(label="to_do", aspect=LegalAspect.to_do);
+    not_to_do = LegalNode(label="not_to_do", aspect=LegalAspect.not_to_do);
+    questions = LegalNode(label="questions", aspect=LegalAspect.questions);
+    legal_jargon = LegalNode(label="legal_jargon", aspect=LegalAspect.legal_jargon);
+    who_can_help = LegalNode(label="who_can_help", aspect=LegalAspect.who_can_help);
+    what_happens_next = LegalNode(label="what_happens_next", aspect=LegalAspect.what_happens_next);
     case_summary = SummaryNode();
 
     root ++> situation_summary;
