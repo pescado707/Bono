@@ -48,39 +48,44 @@ node LegalNode {
         return "";
     }
 
+    # def get_advice_py(user_situation: str, context: str) -> str {
+    #     import requests
+    #     import json
+
+    #     url = "http://localhost:11434/api/generate";
+        
+    #     # --- CUSTOM TASK LOGIC ---
+    #     # This ensures 'follow_up_questions' actually generates questions
+    #     task_instruction = f"Provide legal guidance for the {self.label} section.";
+        
+    #     if self.label == "follow_up_questions" {
+    #         task_instruction = "Do not provide a summary. Instead, generate a list of 3-5 critical follow-up questions the user should ask an immigration attorney based on their situation.";
+    #     }
+        
+    #     full_prompt = f"Context from USCIS: {context}\n\nUser Situation: {user_situation}\n\nTask: {task_instruction}";
+
+    #     payload = {
+    #         "model": self.model,
+    #         "prompt": full_prompt,
+    #         "stream": False
+    #     };
+
+    #     try {
+    #         response = requests.post(url, json=payload, timeout=45);
+    #         if response.status_code == 200 {
+    #             return response.json().get("response", "No response from model.");
+    #         } else {
+    #             return f"Error: Server returned status {response.status_code}";
+    #         }
+    #     } except Exception as e {
+    #         # This keeps the app from crashing and tells the user exactly what's wrong
+    #         return f"Ollama Connection Error. Ensure 'ollama serve' is running and you have downloaded {self.model}.";
+    #     }
+    # }
+
     def get_advice_py(user_situation: str, context: str) -> str {
-        import requests
-        import json
-
-        url = "http://localhost:11434/api/generate";
-        
-        # --- CUSTOM TASK LOGIC ---
-        # This ensures 'follow_up_questions' actually generates questions
-        task_instruction = f"Provide legal guidance for the {self.label} section.";
-        
-        if self.label == "follow_up_questions" {
-            task_instruction = "Do not provide a summary. Instead, generate a list of 3-5 critical follow-up questions the user should ask an immigration attorney based on their situation.";
-        }
-        
-        full_prompt = f"Context from USCIS: {context}\n\nUser Situation: {user_situation}\n\nTask: {task_instruction}";
-
-        payload = {
-            "model": self.model,
-            "prompt": full_prompt,
-            "stream": False
-        };
-
-        try {
-            response = requests.post(url, json=payload, timeout=45);
-            if response.status_code == 200 {
-                return response.json().get("response", "No response from model.");
-            } else {
-                return f"Error: Server returned status {response.status_code}";
-            }
-        } except Exception as e {
-            # This keeps the app from crashing and tells the user exactly what's wrong
-            return f"Ollama Connection Error. Ensure 'ollama serve' is running and you have downloaded {self.model}.";
-        }
+        # Temporarily bypass the network call to test the UI
+        return f"MOCK DATA: Analysis for {self.label}. This proves the frontend-to-backend bridge is working!";
     }
 
     def retrieve_value(prompt: str) -> str {
